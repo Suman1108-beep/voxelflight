@@ -1,0 +1,47 @@
+{
+  "schema": "voxelflight.frozen-trajectory-evaluation.v1",
+  "frames": 90,
+  "image_id_range": [
+    61201,
+    63000
+  ],
+  "protocol": {
+    "ground_truth_used_in_construction": false,
+    "reference_use": "Scoring only; geometry remains frozen",
+    "evaluated_quantity": "Camera centres, NOT reconstructed surface points",
+    "reference_interpolation": "Linear by source image ID; no extrapolation; gaps <=30 frames",
+    "interpolated_queries": 87,
+    "exact_reference_queries": 3
+  },
+  "absolute_trajectory_error": {
+    "rmse_m": 8.648925335948936,
+    "median_m": 8.043026739373126,
+    "p95_m": 11.082071586622328,
+    "max_m": 11.22287481897966
+  },
+  "raw_gps_absolute_error": {
+    "rmse_m": 9.136534841286744,
+    "median_m": 7.474094659073692,
+    "p95_m": 13.594731425130815,
+    "max_m": 13.968141631952609
+  },
+  "se3_aligned_trajectory_error": {
+    "rmse_m": 0.45105772473781797,
+    "median_m": 0.37774252352672244,
+    "p95_m": 0.7994566999656363,
+    "max_m": 1.0777007206637421
+  },
+  "sim3_aligned_trajectory_error": {
+    "rmse_m": 0.39739607712389324,
+    "median_m": 0.3187815894449269,
+    "p95_m": 0.7456049479989374,
+    "max_m": 0.7891157764575718
+  },
+  "evaluation_only_sim3_scale": 0.9894460877893627,
+  "surface_rmse_m": null,
+  "sih_spatial_accuracy_verified": false,
+  "frozen_run": "sfm-anchored90-gps-20260910",
+  "frozen_report_sha256": "fe8a308ccf542c42a20f7b52e58d819c5101d4b3d772f7e83c108b41bcbf86eb",
+  "reference_sha256": "50e95abc70461567a915a76ba17231ae3088b834dbcb433737135eacb9c9c552",
+  "warning": "Aligned scores remove global errors using reference data at evaluation time. They are not absolute positioning or surface-accuracy scores."
+}

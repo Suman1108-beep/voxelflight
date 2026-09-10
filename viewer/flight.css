@@ -1,0 +1,134 @@
+/* VoxelFlight: a focused working surface with a restrained pixel-art identity. */
+.flight-studio{--accent:#a8f0d4;--gold:#f2c27c;--border:#293248;--muted:#a8b3c8;background:#090e1b}
+.flight-studio .topbar{height:76px;min-height:76px;padding:0 28px;background:#0b1020;gap:25px;border-bottom:1px solid #30384f}
+.flight-studio .brand-caption,.flight-studio .brand-divider{display:none}
+.flight-studio .main-nav{margin-left:auto;gap:10px}
+.flight-studio .top-actions{margin-left:8px}
+.flight-studio .button{box-shadow:2px 2px 0 #030713;min-height:40px;border-radius:5px}
+.flight-studio .button.accent{background:#b0f1d6;color:#102c25;border:1px solid #cfffea;box-shadow:3px 3px 0 #38665b}
+.flight-studio .workspace{grid-template-columns:230px minmax(0,1fr);position:relative}
+.flight-studio .sidebar{background:#101727;border-right:1px solid #2a354d}
+.flight-studio .side-intro{border:0;padding:26px 22px 0}
+.flight-studio .side-intro h1{font-family:var(--pixel-font);font-size:23px;line-height:1.6;text-shadow:none;margin:14px 0 8px;color:#eff5ff}
+.flight-studio .side-intro p{font-size:14px;color:#acb9cc}
+.flight-studio .eyebrow{font-size:12px;color:#92b2cc;letter-spacing:.1em}
+.flight-studio .scene-meta{font-size:12px;padding:16px 0;border-color:#28324b}
+.flight-studio .scene-meta>span:last-child{display:none}
+.flight-studio .side-section{padding:22px 18px 0}
+.flight-studio .side-section h2{font-family:inherit;font-size:12px;letter-spacing:.1em;color:#adb8ce;margin-bottom:12px}
+.flight-studio .mode-buttons{display:grid;grid-template-columns:1fr;gap:8px}
+.flight-studio .mode-buttons button{flex-direction:row;align-items:center;justify-content:flex-start;padding:13px 15px;gap:11px;background:transparent;border:1px solid transparent;color:#b0bfd0;min-height:46px;box-shadow:none}
+.flight-studio .mode-buttons button.active{background:#1b3a35;border:1px solid #6caf9a;color:#c4ffe8;box-shadow:3px 3px 0 #061915}
+.flight-studio .mode-buttons button[data-mode=geometry].active{background:#2b2642;border-color:#9f86cb;color:#e0caff;box-shadow:3px 3px 0 #100c1f}
+.flight-studio .window-item{padding:12px;background:#111e30;border-color:#2e4054;border-left-width:3px}
+.flight-studio .window-item>span{font-size:14px}.flight-studio .window-item small{font-size:12px;line-height:1.6}
+.flight-studio .help-copy{font-size:14px;line-height:1.75;color:#c2cede}.flight-studio .micro{font-size:12px;line-height:1.7}
+.flight-studio .side-bottom{padding:20px 18px;margin-top:auto;background:none}
+.flight-studio .pixel-scout{background:none;border:0;box-shadow:none;padding:0;margin:6px 0 14px}
+.flight-studio .pixel-scout .runner{transform:scale(.75);margin-left:-10px;margin-right:-8px}
+.flight-studio .pixel-scout p{font-size:12px;line-height:1.7}.flight-studio .pixel-scout strong{font-size:12px}
+.flight-studio .availability{font-size:12px;margin:14px 0 0;line-height:1.6}
+.flight-studio .stage-top{background:#0f1625;min-height:64px;height:auto;padding:12px 22px;gap:16px;flex-wrap:wrap;border-color:#28334a}
+.flight-studio .breadcrumbs{font-size:14px}.flight-studio .breadcrumbs>span:first-child{display:none}.flight-studio .breadcrumbs>span:nth-child(2){display:none}
+.flight-studio .stage-actions{margin-left:auto;gap:9px}.flight-studio .stage-actions .button{font-size:13px;padding:8px 12px;gap:7px}
+.flight-studio .stage-actions .icon-button{height:36px;width:36px}
+.result-context{display:flex;align-items:center;gap:15px;padding:12px 22px;border-bottom:1px solid #243047;background:#0e1523;min-height:60px;flex-shrink:0}
+.result-context .status-chip{display:inline-flex;white-space:nowrap;color:#bcdfcf;font-size:12px}
+.result-context p{margin:0;font-size:13px;color:#9dacc1;line-height:1.6;max-width:800px}
+.flight-studio #appearance-view{background:#080f19;padding:20px 24px;gap:16px;container-type:size;overflow:hidden;justify-content:center}
+.flight-studio .comparison{border:1px solid #435770;box-shadow:0 12px 45px #0004;border-radius:4px;width:min(100%,calc((100cqh - 96px) * 16 / 9));max-width:1160px;max-height:calc(100cqh - 96px);min-height:0;margin:0 auto;aspect-ratio:16/9;flex:0 1 auto}
+.flight-studio .appearance-header,.flight-studio .appearance-footer{flex-shrink:0}
+.view-explanation summary{font-size:13px;line-height:1.6;color:#a8bbcd;cursor:pointer}
+.flight-studio .comparison-label{font-size:12px;letter-spacing:.08em;padding:9px 12px;backdrop-filter:blur(8px);background:#0b1424dc}
+.flight-studio .comparison-line{background:#c0ffea}.flight-studio .comparison-line>span{background:#c0ffea;border-radius:4px;width:40px;height:46px;border-color:#edfff8;box-shadow:3px 3px 0 #123e32}
+.flight-studio .appearance-header,.flight-studio .appearance-footer{width:100%;max-width:1160px;margin:0 auto;font-size:13px;flex-direction:row}
+.flight-studio .timeline{background:#101829;height:150px;min-height:150px;border-top:1px solid #35465f;padding:12px 20px 7px}
+.flight-studio .frame-strip{height:72px}.flight-studio .frame-thumb{height:62px;min-width:70px}
+.flight-studio .timeline-top h2{font-family:inherit;letter-spacing:.09em;font-size:12px}.flight-studio .timeline-top>span{font-size:12px}
+.flight-studio .timeline-controls .micro{font-size:12px}.flight-studio .timeline-controls{height:30px}
+.flight-studio .statusbar{background:#0b1120;border-color:#29354b;color:#8da1b7}
+.flight-studio .inspector{display:none}
+.flight-studio .inspector-drawer{inset:0 0 0 auto;margin:0;width:min(390px,100%);height:100dvh;max-height:100dvh;border:0;border-left:1px solid #4c566f;border-radius:0;padding:0;background:#111b2b}
+.flight-studio .inspector-drawer .inspector{display:flex;min-height:100%;border:0;background:#111b2b;overflow:visible}
+.flight-studio .inspector-heading{position:sticky;top:0;background:#131d30;z-index:2;padding:19px 23px}
+.flight-studio .inspector-metric{background:#1e293a;border-color:#39485f}
+.flight-studio .metric-value>strong{font-size:36px;color:#d3dcf1;text-shadow:none}
+.flight-studio .metric-tag{background:#2c263c;color:#d9c7f7;border-color:#746084}
+@media(min-width:1600px){.flight-studio .workspace{grid-template-columns:250px minmax(0,1fr)}.flight-studio #appearance-view{padding:24px 40px}}
+@media(max-width:1050px){.flight-studio .topbar{padding:0 18px;gap:12px}.flight-studio .top-actions .quiet>span:last-child{display:none}.flight-studio .main-nav{gap:2px}.flight-studio .brand>strong{font-size:17px}.flight-studio .workspace{grid-template-columns:210px minmax(0,1fr)}.flight-studio .stage-actions{gap:5px}.result-context{align-items:flex-start;gap:10px}.flight-studio .appearance-footer{flex-wrap:wrap}}
+@media(max-width:760px){.flight-studio{height:auto;min-height:100dvh;overflow:auto}.flight-studio .topbar{height:auto;padding:15px 16px;gap:12px;flex-wrap:wrap}.flight-studio .top-actions{margin-left:auto}.flight-studio .top-actions .button.accent{font-size:13px;padding:8px 10px}.flight-studio .main-nav{order:3;margin:0;width:100%;height:36px;justify-content:space-between}.flight-studio .main-nav button{font-size:14px;padding:0 6px}.flight-studio .workspace{display:flex;flex-direction:column}.flight-studio .sidebar{display:contents}.flight-studio .side-intro{padding:18px 18px 0}.flight-studio .side-intro h1{font-size:20px;margin:4px 0}.flight-studio .side-intro h1 br{display:none}.flight-studio .side-intro>.eyebrow{display:block}.flight-studio .side-intro p{margin:4px 0 0}.flight-studio .display-section{padding:16px 18px}.flight-studio .mode-buttons{grid-template-columns:1fr 1fr;max-width:none}.flight-studio .mode-buttons button{justify-content:center;padding:10px 8px;font-size:14px}.flight-studio .scene-stage{order:2;height:760px;min-height:0}.flight-studio .stage-top{padding:10px 14px;gap:10px}.flight-studio .breadcrumbs{font-size:13px}.flight-studio .stage-actions .button{font-size:12px;padding:7px 9px}.flight-studio #snapshot,.flight-studio #fullscreen{display:none}.result-context{padding:12px 14px;flex-wrap:wrap;gap:6px}.result-context p{font-size:12px}.flight-studio #appearance-view{padding:16px 14px;justify-content:center;gap:14px}.flight-studio .comparison{min-height:0}.flight-studio .appearance-header{font-size:12px;flex-wrap:wrap}.flight-studio .appearance-footer{font-size:12px;gap:8px}.flight-studio .timeline{padding:12px 14px;height:150px;min-height:150px}.flight-studio .timeline-top>span{font-size:12px}.flight-studio #appearance-settings:not([hidden]),.flight-studio #geometry-settings:not([hidden]){display:grid;order:3;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));padding:0 0 20px}.flight-studio .side-bottom{order:4;display:block;padding:16px 18px}.flight-studio .side-bottom .pixel-scout{display:none}.flight-studio .side-bottom .button{max-width:none}.flight-studio .stage-top .icon-button{width:30px;height:32px}.flight-studio .statusbar{min-height:36px}}
+@media(prefers-reduced-motion:reduce){.flight-studio *{animation:none!important;transition:none!important}}
+
+/* A single prepare → process → explore workflow, driven by actual run state. */
+.flight-studio.engine-body .engine-layout{grid-template-columns:360px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);background:#0a111e}
+.mission-bar{grid-column:1/-1;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;gap:24px;background:#0f1727;border-bottom:1px solid #303d53}
+.mission-steps{list-style:none;display:flex;align-items:center;gap:36px;margin:0;padding:0}
+.mission-steps li{display:flex;align-items:center;gap:12px;color:#8e9ab3;position:relative}
+.mission-steps li>span{font-family:var(--pixel-font);font-size:14px;display:grid;place-items:center;width:38px;height:38px;border:1px solid #3b425a;background:#151b2e;box-shadow:2px 2px 0 #070b17}
+.mission-steps strong{display:block;font-size:14px;font-weight:500;line-height:1.6}.mission-steps small{font-size:12px;color:#8f9db3}
+.mission-steps li[aria-current=step]{color:#c9ffe9}.mission-steps li[aria-current=step]>span{color:#b8ffe1;border-color:#83bda7;background:#1c3c36}
+.mission-steps li[data-step=process][aria-current=step]>span{color:#b9d8ff;border-color:#799bcf;background:#1b2d48}
+.mission-steps li[data-step=explore][aria-current=step]>span{color:#ddc8ff;border-color:#aa8bd2;background:#302444}
+.mission-bar .engine-badge{font-size:12px;background:#151d2d;border-radius:4px;max-width:270px;line-height:1.6}
+.flight-studio .engine-controls{background:#111a2b;padding:24px;border-color:#303b50}
+.flight-studio .engine-controls h1{font-size:26px;line-height:1.55;color:#f3f4ff;text-shadow:none;margin:14px 0 12px}
+.flight-studio .engine-intro{font-size:16px;line-height:1.75;margin:0 0 20px}
+.flight-studio .engine-notice{padding:17px;margin:18px 0 24px;background:#242231;border:1px solid #6c5b46;border-left:3px solid #e4b877}
+.connection-label{font-size:12px;letter-spacing:.07em;color:#f1cb93}
+.flight-studio .engine-notice h2{font-family:inherit;font-size:17px;font-weight:500;line-height:1.5;margin:12px 0 8px;color:#f1dfc4}
+.flight-studio .engine-notice p{font-size:14px;color:#c8c1bc;line-height:1.75}
+.flight-studio .engine-notice details{border-top:1px solid #68543f;margin-top:15px;padding-top:14px}
+.flight-studio .engine-notice summary{font-size:13px;line-height:1.6;color:#e6c9a6;cursor:pointer}
+.flight-studio .engine-notice .text-button{color:#b4f5dd;font-size:14px;line-height:1.6}
+.flight-studio .engine-field{margin-bottom:22px}.flight-studio .engine-field>span{font-size:14px;line-height:1.6}
+.flight-studio .engine-field input{padding:10px;border-style:dashed;background:#0c1425;min-height:51px}
+.flight-studio .engine-field input::file-selector-button{background:#263b4b;border:1px solid #547588;color:#d1eee9;border-radius:3px}
+.flight-studio .engine-field input:hover{border-color:#7baea3}.flight-studio .engine-field input[aria-invalid=true]{border-color:#edae78}
+.flight-studio .engine-calibration{border-top:1px solid #303b52;margin-bottom:18px;padding-top:16px}
+.flight-studio .engine-calibration summary{font-size:14px;color:#c9d2e6;line-height:1.6;cursor:pointer}
+.flight-studio .engine-calibration summary>span{font-size:12px;color:#879cb4;display:block;margin:4px 0 0 16px}
+.flight-studio .engine-calibration .engine-options,.flight-studio .engine-calibration>.engine-field{margin-top:18px}
+.flight-studio .engine-field select{min-height:44px;background:#111e31;font-size:14px}
+.flight-studio .engine-history{border-color:#3b4560;padding-top:17px}.flight-studio .engine-history summary{font-size:14px;color:#d4def1;cursor:pointer;line-height:1.8}.flight-studio .engine-history summary span{font-size:12px;color:#93a7be;margin-left:12px}
+.flight-studio .engine-history .section-heading{margin-top:20px}.flight-studio .engine-history h2{font:12px inherit;letter-spacing:.06em}
+.flight-studio .engine-toolbar{background:#101827;padding:18px 24px;border-color:#2f3b51}
+.flight-studio .engine-toolbar h2{font-size:17px;line-height:1.5}.flight-studio .engine-view-actions .button{font-size:13px;min-height:36px;padding:8px 11px}
+.flight-studio .engine-viewport{min-height:540px;background:#080f1b}.flight-studio .engine-viewport canvas{min-height:540px}
+.flight-studio .engine-viewport>div#engine-empty{background:radial-gradient(ellipse at 50% 45%,#26304b55,transparent 70%),#0a111e;padding:36px}
+.flight-studio #engine-empty h2{font-size:clamp(22px,2vw,30px);margin:20px 0 12px;color:#f2eaff;max-width:600px}
+.flight-studio #engine-empty>p{font-size:16px;line-height:1.8;margin:0 0 24px;max-width:470px}
+.flight-studio #engine-empty>.eyebrow{color:#adbad4;font-size:12px;margin-top:25px;letter-spacing:.09em}
+.sample-contact-sheet{display:flex;justify-content:center;align-items:center;width:min(480px,90%);gap:10px;padding:14px 0}
+.sample-contact-sheet img{display:block;width:31%;height:125px;object-fit:cover;border:1px solid #587188;border-radius:5px;box-shadow:5px 5px 0 #040814;opacity:.8}
+.sample-contact-sheet img:nth-child(1){transform:rotate(-8deg) translateY(9px)}.sample-contact-sheet img:nth-child(2){border-color:#a4cebe;opacity:1;z-index:1}.sample-contact-sheet img:nth-child(3){transform:rotate(8deg) translateY(9px)}
+.flight-studio #sample-caption{font-size:12px;line-height:1.6;color:#92a4bc;margin-top:16px;max-width:430px}
+.flight-studio #engine-empty>.runner{margin:0 auto 14px;flex:none}
+.flight-studio .engine-result{background:#121b2b;border-color:#34425a}.flight-studio .engine-metrics strong{font-family:inherit;font-size:26px;letter-spacing:-.5px;color:#cce9df}
+.flight-studio .engine-result summary{color:#e0c99d}.flight-studio .engine-result li{color:#afbbd0}
+.flight-studio .engine-layerbar{background:#101b2eed;border-color:#57667e;box-shadow:4px 4px 0 #050c17;border-radius:4px}
+.flight-studio .engine-progress{background:#152d2a;border:1px solid #548f79;border-top:3px solid #9de2bf}
+.flight-studio .engine-progress>.runner{display:block;margin:0 auto 10px}.flight-studio .engine-progress progress{height:9px}
+
+/* Retain the supplied pixel-art entrance, put the real experience one click away. */
+.flight-entrance.pixel-entrance{background:radial-gradient(ellipse at 50% 38%,#25204022,transparent 58%),#050918}
+.flight-entrance.pixel-entrance .entrance-nav{border-bottom:1px solid #20263b}
+.flight-entrance.pixel-entrance .entrance-main{padding-top:12px;padding-bottom:34px}
+.flight-entrance.pixel-entrance .world-image{max-height:290px}
+.flight-entrance.pixel-entrance .signin-panel{width:min(480px,100%);margin-top:0}
+.flight-entrance.pixel-entrance .signin-panel>.eyebrow{font-size:12px;color:#b89bd3;margin:8px 0 16px}
+.flight-entrance.pixel-entrance .signin-panel h1{font-size:clamp(26px,3vw,35px);line-height:1.5;letter-spacing:-1.1px;margin-bottom:15px}
+.flight-entrance.pixel-entrance .signin-panel h1>span{color:#b5f1d8}
+.flight-entrance.pixel-entrance .panel-intro{font-size:16px;max-width:420px;line-height:1.7;margin-bottom:24px;color:#acb8cd}
+.flight-entrance.pixel-entrance .launch-demo{background:#b3f2d9;width:100%;min-height:57px;border:1px solid #d6ffed;border-radius:4px;color:#14372d;box-shadow:4px 4px 0 #416957;display:flex;justify-content:space-between;padding:14px 22px;margin:0;font-size:16px;font-weight:600}
+.flight-entrance.pixel-entrance .launch-demo>span:last-child{color:#14372d;font-size:24px}
+.flight-entrance.pixel-entrance .launch-demo:hover{background:#ceffe9;translate:0 -2px}
+.flight-entrance.pixel-entrance .guest-note{font-size:12px;color:#9ba9bd;margin:13px 0 22px}
+.signin-divider{display:flex;align-items:center;gap:14px;font-size:12px;color:#9ba5bc;margin-bottom:20px}
+.signin-divider:before,.signin-divider:after{content:"";height:1px;background:#293247;flex:1}
+.flight-entrance.pixel-entrance .provider.primary{min-height:49px;background:#131d30;color:#dce5f6;border:1px solid #3c4b65;box-shadow:3px 3px 0 #020510;font-size:14px}
+.flight-entrance.pixel-entrance .provider.primary:hover{background:#223345;color:#d7ffee;border-color:#789d90}
+.other-providers{grid-column:1/-1;font-size:13px;color:#9faac1;margin:3px 0 15px}.other-providers summary{width:max-content;max-width:100%;margin:auto;cursor:pointer;line-height:1.8}.other-providers>div{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
+.flight-entrance.pixel-entrance .provider-state{font-size:12px}.flight-entrance.pixel-entrance .signin-bottom{margin-top:7px}.flight-entrance.pixel-entrance .entrance-footer{font-size:12px}
+@media(max-width:760px){.flight-studio .scene-stage{height:640px}.flight-studio .statusbar>span:last-of-type{display:none}.flight-studio .statusbar #status-text{max-width:58vw}}
+@media(max-width:1050px){.flight-studio.engine-body .engine-layout{grid-template-columns:310px minmax(0,1fr)}.mission-bar{padding:15px 20px;gap:18px}.mission-steps{gap:22px}.mission-bar .engine-badge{max-width:205px}.flight-studio .engine-controls{padding:22px 18px}.flight-studio #engine-empty{padding:24px}.sample-contact-sheet img{height:110px}}
+@media(max-width:760px){.flight-studio.engine-body .engine-layout{display:flex;flex-direction:column;overflow:visible}.mission-bar{flex-wrap:wrap;padding:15px 18px;gap:15px}.mission-steps{width:100%;justify-content:space-between;gap:10px}.mission-steps li{gap:7px}.mission-steps li>span{font-size:12px;width:29px;height:31px}.mission-steps strong{font-size:13px}.mission-steps small{display:none}.mission-bar .engine-badge{max-width:none;width:100%;text-align:center}.flight-studio .engine-controls{padding:24px 20px;overflow:visible}.flight-studio .engine-controls h1{font-size:26px}.flight-studio .engine-controls h1 br{display:none}.flight-studio .engine-viewport,.flight-studio .engine-viewport canvas{min-height:580px}.flight-studio .engine-toolbar{padding:18px}.flight-studio .engine-viewport>div#engine-empty{padding:26px 20px}.flight-studio #engine-empty h2{font-size:22px}.sample-contact-sheet img{height:110px}.flight-studio .engine-metrics{gap:22px 16px}.flight-studio .engine-metrics strong{font-size:23px}.flight-entrance.pixel-entrance .world-image{max-height:220px;min-height:160px}.flight-entrance.pixel-entrance .entrance-main{padding-top:0}.flight-entrance.pixel-entrance .signin-panel h1{font-size:28px}.flight-entrance .other-providers .provider{padding:10px;font-size:13px}.flight-entrance.pixel-entrance .launch-demo{font-size:15px;padding:13px 18px}.flight-entrance.pixel-entrance .wordmark{font-size:19px}.flight-entrance.pixel-entrance .entrance-nav{padding:0 18px}.flight-entrance.pixel-entrance .entrance-nav .nav-link{font-size:12px;gap:8px}.flight-entrance.pixel-entrance .mark{width:31px;height:31px;font-size:20px;margin-right:9px}}

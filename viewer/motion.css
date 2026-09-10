@@ -1,0 +1,5 @@
+/* Original generated sprite, cropped in CSS; no simulated percentages or timed loading delays. */
+.runner{width:80px;height:100px;background-image:url('/assets/art/survey-robot-run.png');background-repeat:no-repeat;background-size:640px 213.333px;background-position:0 -55px;animation:survey-run .85s steps(8) infinite;flex:none}
+@keyframes survey-run{to{background-position:-640px -55px}}
+@media(prefers-reduced-motion:reduce){.runner{animation:none}}
+.motion-paused .runner{animation-play-state:paused}

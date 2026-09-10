@@ -1,0 +1,32 @@
+_base_: base.yaml
+
+chosen_model: map_anything
+path_feedforward: facebook/map-anything-apache
+path_retrieval: /mnt/road/sota/gluemap/checkpoints/dino_salad.ckpt
+path_tracker: /mnt/road/sota/gluemap/checkpoints/vggsfm_v2_0_0_track_predictor.bin
+path_dg: ""
+
+images_path: /mnt/road/sih3d/data/keyframes/zurich_full_61201_63000_180
+write_path: /mnt/road/sih3d/outputs/gluemap_zurich_180_calibrated
+temp_path: /mnt/road/sih3d/tmp/gluemap_zurich_180_calibrated
+
+# Camera calibration is an optional SIH input and is known for this benchmark.
+# The path contributes intrinsics only; its poses and points are never read into
+# GLUEMAP's global structure estimation.
+camera_model: PINHOLE
+intrinsics_mode: SHARED
+gt_intrinsics_path: /mnt/road/sih3d/outputs/colmap_video_sfm_180/sparse/0
+
+is_sequential: true
+sample_frequency: 1
+num_neighbors: 40
+num_neighbors_sequential: 24
+batch_size: 1
+retrieval_batch_size: 24
+num_workers: 2
+num_track_per_img: 1024
+max_num_tracks: 60000
+skip_doppelgangers: true
+use_dummy_tracks: false
+coarse_only: false
+force_load: true

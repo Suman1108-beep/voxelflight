@@ -1,0 +1,3 @@
+# Added to the existing .venv-mac, preserving the tested reconstruction stack.
+google-auth[requests]==2.58.0
+CacheControl==0.14.4

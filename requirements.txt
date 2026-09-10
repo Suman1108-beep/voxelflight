@@ -1,0 +1,5 @@
+# Tested Apple Silicon reconstruction environment. See docs/setup.md before installing.
+-r requirements-mac.lock.txt
+-r requirements-refusion.txt
+-r requirements-public.txt
+-r requirements-test.txt

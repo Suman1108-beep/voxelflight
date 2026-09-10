@@ -1,0 +1,41 @@
+paths:
+  project_root: /mnt/road/sih3d
+  raw_video_dir: /mnt/road/sih3d/data/raw
+  telemetry_dir: /mnt/road/sih3d/data/telemetry
+  keyframe_dir: /mnt/road/sih3d/data/keyframes
+  output_dir: /mnt/road/sih3d/outputs
+  cache_dir: /mnt/road/sih3d/cache
+
+keyframes:
+  max_frames: 300
+  candidates_per_bin: 6
+  jpeg_quality: 95
+  minimum_exposure_score: 0.15
+
+reconstruction:
+  pose_model: vggt_slam_2
+  geometry_model: map_anything_apache
+  precision: bfloat16
+  confidence_percentile: 35
+  refine_poses: true
+  submap_size: 16
+  maximum_loop_closures: 1
+  dynamic_object_masking: true
+
+georeference:
+  prefer_rtk_ppk: true
+  robust_alignment: true
+  minimum_gps_samples: 3
+
+export:
+  point_cloud: true
+  mesh: true
+  gaussian_splat: true
+  formats: [obj, ply, las, geotiff, glb, gltf, fbx]
+
+sih_targets:
+  maximum_spatial_error_m: 1.0
+  maximum_runtime_to_video_ratio: 1.5
+  engineering_spatial_error_m: 0.5
+  engineering_runtime_to_video_ratio: 1.0
+  engineering_visible_scene_completeness: 0.90

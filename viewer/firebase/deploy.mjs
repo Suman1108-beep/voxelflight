@@ -1,0 +1,10 @@
+import {readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {resolve} from 'node:path';
+const root=resolve(import.meta.dirname,'..');
+const settings=JSON.parse(await readFile(resolve(root,'firebase/settings.json'),'utf8'));
+const aliases=JSON.parse(await readFile(resolve(root,'.firebaserc'),'utf8'));
+if(!settings.projectId||aliases.projects?.default!==settings.projectId)throw new Error('Select the matching Firebase project before deploying.');
+if(!settings.providers.includes('google'))throw new Error('Enable and verify Google Authentication before deploying.');
+execFileSync(process.execPath,[resolve(root,'build.mjs'),'--firebase'],{cwd:root,stdio:'inherit'});
+execFileSync('firebase',['deploy','--only','hosting','--project',settings.projectId,'--non-interactive'],{cwd:root,stdio:'inherit'});

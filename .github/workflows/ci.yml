@@ -1,0 +1,32 @@
+name: Frontend checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: viewer
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: viewer/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Restore checksum-verified public demo assets
+        run: node scripts/fetch-demo-assets.mjs
+      - run: pnpm test
+      - run: pnpm run build:firebase

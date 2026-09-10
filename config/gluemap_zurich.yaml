@@ -1,0 +1,34 @@
+_base_: base.yaml
+
+# Global SfM backend for the 180-frame Zurich single-pass benchmark.
+chosen_model: map_anything
+path_feedforward: facebook/map-anything-apache
+path_retrieval: /mnt/road/sota/gluemap/checkpoints/dino_salad.ckpt
+path_tracker: /mnt/road/sota/gluemap/checkpoints/vggsfm_v2_0_0_track_predictor.bin
+path_dg: ""
+
+images_path: /mnt/road/sih3d/data/keyframes/zurich_full_61201_63000_180
+write_path: /mnt/road/sih3d/outputs/gluemap_zurich_180
+temp_path: /mnt/road/sih3d/tmp/gluemap_zurich_180
+
+# The source is an ordered, single-camera video. Sharing intrinsics reduces
+# degrees of freedom and improves stability for a nearly straight flight.
+camera_model: SIMPLE_PINHOLE
+intrinsics_mode: SHARED
+is_sequential: true
+sample_frequency: 1
+num_neighbors: 40
+num_neighbors_sequential: 24
+
+# Stay inside 45 GB VRAM and the host's two CPU cores.
+batch_size: 1
+retrieval_batch_size: 24
+num_workers: 2
+num_track_per_img: 1024
+max_num_tracks: 120000
+
+# Sequential drone footage does not need the large Doppelgangers++ model.
+skip_doppelgangers: true
+use_dummy_tracks: false
+coarse_only: false
+force_load: true

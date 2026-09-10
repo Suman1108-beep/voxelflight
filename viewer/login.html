@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080d1c">
+  <title>VoxelFlight — Enter the studio</title>
+  <meta name="description" content="Explore real drone reconstructions in an interactive 3D workspace. Sign in or open the public demo.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/entrance.css">
+  <link rel="stylesheet" href="/pixel.css"><link rel="stylesheet" href="/studio.css"><link rel="stylesheet" href="/flight.css">
+  <script type="module" src="/entrance.js"></script>
+</head>
+<body class="entrance pixel-entrance flight-entrance" data-page="signin">
+  <a class="skip" href="#signin">Skip to sign in</a>
+  <header class="entrance-nav">
+    <a class="wordmark" href="/" aria-label="VoxelFlight home"><span class="mark">V<span>F</span></span>Voxel<span>Flight</span><small>RECONSTRUCTION STUDIO</small></a>
+    <a class="nav-link" href="/workspace">Explore the demo <span aria-hidden="true">↗</span></a>
+  </header>
+  <main class="entrance-main">
+    <section class="world" aria-label="Pixel-art welcome scene">
+      <div class="world-stage" id="world-stage">
+        <img class="world-image" src="/assets/art/pixel-queue-v2.jpg" width="1902" height="827" fetchpriority="high" alt="Pixel-art companions waiting at a warmly lit studio doorway. Decorative illustration, not a reconstruction.">
+      </div>
+    </section>
+    <section class="signin-panel" id="signin" aria-labelledby="signin-heading">
+      <span class="eyebrow">VOXELFLIGHT / RECONSTRUCTION STUDIO</span>
+      <h1 id="signin-heading">Welcome to<br><span>VoxelFlight.</span></h1>
+      <p class="panel-intro">Sign in to your reconstruction studio. Your flights, your results, your workspace.</p>
+      <div class="signin-divider"><span>Sign in to your studio</span></div>
+      <div class="provider-buttons">
+        <a class="provider primary" id="chatgpt-signin" href="/signin-with-chatgpt?return_to=/account" target="_top"><span class="provider-icon" aria-hidden="true">◎</span><span>Continue with ChatGPT</span><span class="arrow" aria-hidden="true">↗</span></a>
+        <details class="other-providers"><summary>Other sign-in providers</summary><div><button class="provider" data-provider="google" disabled aria-label="Continue with Google"><span class="provider-icon google" aria-hidden="true">G</span><span>Google</span><span class="provider-state">Checking</span></button><button class="provider" data-provider="facebook" disabled aria-label="Continue with Facebook"><span class="provider-icon facebook" aria-hidden="true">f</span><span>Facebook</span><span class="provider-state">Checking</span></button></div></details>
+      </div>
+      <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+      <a class="guest-button launch-demo" href="/workspace"><span>Explore as a guest</span><span aria-hidden="true">→</span></a>
+      <p class="guest-note">No account needed · view the saved flight</p>
+      <div class="signin-bottom"><span class="lock-symbol" aria-hidden="true">◇</span><p>Sign in through your provider.<br>We never see your password.</p><button class="motion-button" id="motion-toggle" aria-pressed="false" title="Pause decorative animation">Pause motion</button></div>
+      <details class="privacy-note"><summary>Privacy &amp; sign-in details</summary><p>Sign-in uses your provider’s identifier, name and email to display your account. Session cookies keep you signed in. This site does not request your contacts or social posts. The public demo is available without signing in. Reconstruction files stay on the processing workstation; signing in does not upload videos or start a reconstruction.</p></details>
+    </section>
+  </main>
+  <footer class="entrance-footer"><span>VoxelFlight / FLIGHT LAB</span><span><i></i>Public demo available</span><a href="/workspace#validation">See the evidence ↗</a></footer>
+  <div class="transition-screen" id="transition-screen" hidden role="status" aria-live="polite"><div class="runner" aria-hidden="true"></div><h2 id="transition-title">Opening your workspace</h2><p id="transition-detail">Loading the next view…</p><button class="nav-link" id="cancel-transition">Hide loading screen</button></div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+/* Shared account details match the existing pixel-art studio, without redesigning the viewer. */
+[hidden]{display:none!important}
+[data-account-link]{max-width:11rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.returning-account{padding:1.25rem;border:1px solid #425c64;background:#142831;margin-block:1rem}
+.returning-account>p{color:#b0f3df;font-size:1.25rem;line-height:1.5;margin:0 0 1rem;overflow-wrap:anywhere}
+.account-panel #account-name{font-family:inherit;font-size:clamp(1.8rem,3vw,3rem);line-height:1.2;letter-spacing:-.025em;overflow-wrap:anywhere}
+.account-info dd{overflow-wrap:anywhere}
+.provider-icon svg{display:block}
+.account-recovery{display:block;font-size:.875rem;color:#a7e7d4;margin-block:1rem}
+.account-panel:has(#account-content:not([hidden])) .account-recovery{display:none}
+.provider-state{font-size:.875rem}
+.provider:disabled{cursor:not-allowed;opacity:.6}
+.provider:focus-visible,.account-recovery:focus-visible{outline:3px solid #bba5ff;outline-offset:4px}
+.flight-entrance.pixel-entrance .provider.primary{min-height:57px;background:#b3f2d9;color:#14372d;border-color:#d6ffed;box-shadow:4px 4px 0 #416957;font-size:16px}
+.flight-entrance.pixel-entrance .provider.primary:hover:not(:disabled){background:#ceffe9;color:#14372d}
+.flight-entrance.pixel-entrance .launch-demo{margin-top:22px;min-height:49px;background:transparent;color:#dce5f6;border-color:#3c4b65;box-shadow:none;font-size:14px;font-weight:500}
+.flight-entrance.pixel-entrance .launch-demo>span:last-child{color:#b3f2d9}
+.flight-entrance.pixel-entrance .launch-demo:hover{background:#152536}
+@media(max-width:650px){[data-account-link]{max-width:8rem}.returning-account{padding:1rem}}
