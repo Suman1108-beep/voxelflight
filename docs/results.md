@@ -16,11 +16,11 @@ The [machine-readable evaluation](evaluation.json) retains the full precision an
 
 The ~6 minute 10 second sum of separately timed stages covers a one-minute sequence. It is not one measured end-to-end run including upload/queue time, and it does not satisfy the requested ten-minute-video speed benchmark by extrapolation.
 
-## Presentation experiment, retained separately
+## Earlier GPU experiment, retained separately
 
-The six-slide presentation records the **earlier 180-keyframe NVIDIA L40S experiment**. Its results are internally consistent but differ from the latest public saved mesh:
+The **earlier 180-keyframe NVIDIA L40S experiment** remains here for provenance. The final six-slide presentation uses the latest 90-view saved experiment. The two runs have different outputs and processing paths:
 
-| Property | Earlier presentation experiment | Current saved experiment |
+| Property | Earlier GPU experiment | Current saved experiment |
 |---|---:|---:|
 | Selected views | 180 | 90 |
 | Mesh triangles | 450,000 | 646,019 |

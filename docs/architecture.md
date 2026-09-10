@@ -40,7 +40,7 @@ The default upload worker is `mac_reconstruct.py`, using Apple MPS and cached ch
 6. Produce separate local-visual and provisional GPS/UTM-referenced deliverables.
 7. Evaluate frozen predicted camera positions against the reference. Never use reference poses in reconstruction.
 
-The earlier GPU experiment uses MASt3R-SLAM, MapAnything, SegFormer and a position-only telemetry fusion graph. Optional Gaussian splatting fits appearance per scene. That older experiment is documented in the six-slide presentation. Its geometry, timings and image metrics must not be combined with the latest experiment.
+The earlier GPU experiment uses MASt3R-SLAM, MapAnything, SegFormer and a position-only telemetry fusion graph. Optional Gaussian splatting fits appearance per scene. That older experiment is retained separately in [results.md](results.md). The final six-slide presentation describes the latest saved reconstruction. Its geometry, timings and image metrics must not be combined with the earlier experiment.
 
 ## Components
 

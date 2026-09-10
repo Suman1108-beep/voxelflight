@@ -100,7 +100,7 @@ This preserves the application's normal code folders, as permitted by the [NSUT 
 
 ## 8. Final presentation
 
-[Six-slide PowerPoint and six-page PDF](submission/PRESENTATION.md) are committed in `submission/`. The cover still needs the registered team name and ID. The deck records the earlier 180-view L40S experiment; [results.md](docs/results.md) explains how the newer 90-view website result differs.
+[Six-slide PowerPoint and six-page PDF](submission/PRESENTATION.md) are committed in `submission/`. The cover still needs the registered team name and ID. The final deck describes the latest 90-view, source-textured result and the actual model/web stacks, with editable architecture and detailed speaker notes. [Results.md](docs/results.md) keeps the earlier GPU experiment separate.
 
 ## 9. Demo
 
