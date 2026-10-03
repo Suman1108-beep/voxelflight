@@ -31,7 +31,7 @@ test('simplified workspace retains evidence and a keyboard-accessible details di
   assert.match(app,/inspectorDialog\.append\(\$\('\.inspector'\)\)/);
   assert.match(app,/if\(inspectorDialog.open\)inspectorDialog.close\(\)/);
   assert.match(html,/id="open-details"[^>]*aria-haspopup="dialog"/);
-  assert.match(app,/shape is about 0\.6 m median against survey LiDAR/);
+  assert.match(app,/shape is about 0\.7 m median against survey LiDAR/);
   assert.match(app,/image scores do not describe the latest 3D mesh/);
 });
 test('workflow and availability are based on real job state, not a decorative timer',async()=>{

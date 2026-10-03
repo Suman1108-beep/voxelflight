@@ -148,6 +148,52 @@ because the GNSS here is off by 4–13 m.
 The share of the model that lies more than 2 m from the survey LiDAR fell from 24 % to 11–15 %. Most of that
 misplaced geometry was the duplicated "ghost" street caused by trajectory drift.
 
+**720 keyframes + 35 m depth range (`quality720`, the model on the website).** The fusion depth range now matches
+the 35 m used by the visibility check; before, everything 25–35 m away was counted as missed.
+
+| Metric | Value |
+|---|---|
+| Surface shape median | **0.63 m** |
+| Surface within 1 m / 2 m | 68 % / 89 % |
+| Visible coverage within 1 m / 2 m | **35 % / 47 %** |
+| F-score at 1 m | 0.46 |
+| Camera absolute RMSE (H / V) | 2.71 m (2.42 / 1.22) |
+| Camera path shape (Sim3) | 2.38 m |
+| Camera solve | 360 frames solved in one SfM model (96,450 points) |
+| Measured time | **1,441.9 s (24 min)** |
+
+The time was measured with the stages run in sequence, on a GPU shared at 100 % with another job:
+- camera solve 626 s, of which incremental mapping took 439 s;
+- depth for 719 views 539 s;
+- placement, fusion and exports 276 s.
+
+On a free GPU the camera solve and depth run in parallel, so roughly 13–15 min is expected. That has not been measured
+yet. The speed claim therefore stays with fast mode (7 min 8 s); the website shows both times.
+
+**Maximum-coverage mode: the 720-keyframe model with tiled inference (`quality720-tiled`, now on the website).** Each keyframe
+is cut into 4 overlapping crops, giving 2,880 crops in 72 depth windows (2,866 placed, 1,436 of them on interpolated cameras). The
+camera solve is the same as `quality720`.
+
+| Metric | Value |
+|---|---|
+| **Visible coverage within 1 m / 2 m** | **41 % / 55 %** |
+| F-score at 1 m | **0.50** (best) |
+| Surface shape median | 0.73 m |
+| Surface within 1 m / 2 m | 63 % / 85 % |
+| Camera absolute | 2.71 m (same cameras as `quality720`) |
+
+Time is the sum of measured stages, run in sequence on a shared GPU: camera solve 626 s, crops 28 s, depth for 2,880 crops 1,405 s, placement + fusion +
+exports 605 s, **≈ 2,664 s (44 min)**. Use this mode when coverage matters more than turnaround.
+
+**Coverage progression on the 10-minute Zurich flight (visible survey points within 1 m):**
+
+| Mode | Coverage | Time |
+|---|---:|---|
+| Fast (DPVO) | 24 % | 7 min 8 s |
+| Quality, 360 keyframes | 30 % | — |
+| Quality, 720 keyframes, 35 m range | 35 % | 24 min |
+| Maximum coverage (tiled) | **41 %** | 44 min |
+
 ## 3. Coverage — "entire visible scene" (visibility-aware)
 
 Reference points = survey LiDAR points actually **visible** from at least one camera: in the field of view,

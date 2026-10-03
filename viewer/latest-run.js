@@ -20,7 +20,7 @@ function qualitySteps(scene){
   const depth=marks.depth_done_at_s&&marks.camera_solve_done_at_s?(scene.serial?marks.depth_done_at_s-marks.camera_solve_done_at_s:marks.depth_done_at_s):NaN;
   const place=(t['lock SfM models to GNSS']||0)+(t['place neural views']||0);
   return [['Solve the cameras','Every 2nd keyframe is matched on the GPU (SuperPoint + LightGlue) and solved photogrammetrically; the rest are interpolated.',cam.total],
-    ['Predict depth','Pretrained MapAnything predicts metric depth for every keyframe on one A100.',depth],
+    ['Predict depth',scene.tiled?'Pretrained MapAnything predicts metric depth for four overlapping crops of every keyframe (about 4× the detail) on one A100.':'Pretrained MapAnything predicts metric depth for every keyframe on one A100.',depth],
     ['Lock to GNSS and place views','The solved cameras are locked to GNSS and barometer; each depth view is scaled to the tie points it sees.',place],
     ['Fuse the surface on the GPU','Tiled GPU TSDF integration builds the observed surface with bounded memory.',t['tiled GPU TSDF']],
     ['Export six formats','OBJ, PLY, LAS, GeoTIFF DSM, GLB and FBX, each reopened by an independent reader.',t['exports']]];
@@ -33,12 +33,12 @@ export function populateLatestReports({scene,evaluation,photos}){
   $('#scene-subtitle').textContent=`Single pass · ${minutes} minutes · ${scene.keyframes} reconstructed views`;
   $('#rmse').textContent=surface.median_m.toFixed(2);$('#point-count').textContent=scene.point_count.toLocaleString();$('#triangle-count').textContent=scene.mesh_triangles.toLocaleString();
   $('#crs').textContent=`UTM · EPSG:${scene.utm_epsg}`;$('#runtime').textContent=formatTime(wall);
-  $('#runtime').closest('.inspector-section').querySelector('.micro').textContent=quality?`High-quality mode, measured end to end${scene.serial?' with stages run in sequence on a shared GPU':''}. Fast mode processes the same video in ${formatTime(fast)}.`:`Continuous end-to-end run on one A100 for a ${minutes}-minute video: video on disk to all six export formats.`;
+  $('#runtime').closest('.inspector-section').querySelector('.micro').textContent=quality?`${scene.tiled?'Maximum-coverage mode':'High-quality mode'}, ${scene.time_is_sum_of_stages?'sum of measured stages':'measured end to end'}${scene.serial?' run in sequence on a shared GPU':''}. Fast mode processes the same video in ${formatTime(fast)}.`:`Continuous end-to-end run on one A100 for a ${minutes}-minute video: video on disk to all six export formats.`;
   $('#runtime').parentElement.querySelector('dt').textContent='End-to-end time';
   $('#coordinates').textContent='UTM-ALIGNED LOCAL FRAME · METRES';
   $('#frame-summary').textContent=`${scene.thumbnail_frames.length} previews / ${scene.keyframes} reconstructed views`;
   $('.timeline-controls>.micro').textContent=`Watch flight video (${scene.preview_speed||1}× time-lapse)`;
-  const metrics=[quality?['Processing time',formatTime(fast),`Fast mode, ${minutes}-min video · this high-quality model ${formatTime(wall)}`,'ok']:['Processing time',formatTime(wall),`${minutes}-minute video · target under 15 minutes`,'ok'],
+  const metrics=[quality?['Processing time',formatTime(fast),`Fast mode, ${minutes}-min video · this ${scene.tiled?'maximum-coverage':'high-quality'} model ≈${formatTime(wall)}`,'ok']:['Processing time',formatTime(wall),`${minutes}-minute video · target under 15 minutes`,'ok'],
     ['Surface accuracy',m(surface.median_m),`Median vs swisstopo LiDAR · ${pct(surface.lt_1m)} within 1 m`,'ok'],
     ['Absolute positioning',m(absolute.rmse_m),'Consumer GNSS · with RTK input 0.5 m H / 0.41 m V','warn'],
     ['Visible-scene coverage',pct(vis.recall_1m),`Visible survey points within 1 m · ${pct(vis.recall_2m)} within 2 m`,'warn']];

@@ -148,13 +148,13 @@
     },
     {
       "path": "assets/latest/coverage.json",
-      "bytes": 23032,
-      "sha256": "2b6fe7e88144b27de09e46063c1be575f45a1e92b8b4132f1b05b6e192581367"
+      "bytes": 28865,
+      "sha256": "45857ab93530e9e174b75428d189412b52281d59693019fc8b7ffbee93501247"
     },
     {
       "path": "assets/latest/evaluation.json",
-      "bytes": 1717,
-      "sha256": "38adb58d490a4754cd150b413abaa9f6a1c15f1f95626371966105d499e081d0"
+      "bytes": 1726,
+      "sha256": "e58b908b53cc635fae091585fb59f8a5d966288a85978a642b1c980509345861"
     },
     {
       "path": "assets/latest/flight-preview.mp4",
@@ -284,12 +284,12 @@
     {
       "path": "assets/latest/manifest.json",
       "bytes": 1450,
-      "sha256": "9722627c94da791285604dda320eb79ccab037df5a52dcccb5dc132d72bfda81"
+      "sha256": "17989131779623926ba60654f14ef9777a16487439134f2c77de58b94b0015a8"
     },
     {
       "path": "assets/latest/pointcloud.ply",
       "bytes": 6000180,
-      "sha256": "fb8a8c5c2945b6089b5d15704afd6275d1b4962469551c390deae34058ecb0c5"
+      "sha256": "990ec101259a521268e030538a2ee25e71f4e50427e80f8a2eb981c98150967b"
     },
     {
       "path": "assets/latest/poster.jpg",
@@ -298,28 +298,28 @@
     },
     {
       "path": "assets/latest/reconstruction_mesh.fbx",
-      "bytes": 17329136,
-      "sha256": "25795d88d503b884e10d8b4da387a1eb08d7067f03bb7dd816ea81e407eca4c7"
+      "bytes": 22939600,
+      "sha256": "c44ac8554147c3577b90e8bce58c13a30b19aea630f1cd7332a3f9d359247484"
     },
     {
       "path": "assets/latest/reconstruction_mesh.glb",
-      "bytes": 17285700,
-      "sha256": "ddb0e285d42478795e3a020d8f8d253a5a28155802e2fdf311ff088ee84bd697"
+      "bytes": 22576496,
+      "sha256": "41986fff6cfc0b3cf68bf8a59de4a8d5bb04a7b6430d3829e92af10bab969df1"
     },
     {
       "path": "assets/latest/reconstruction_utm.las",
       "bytes": 10400536,
-      "sha256": "09ffe739bb78f2341f78fc42e7b7e6a0b9171e122cc9dd2b5c62e2f33c28fc66"
+      "sha256": "5c3dcbed5b9e92a89093a366c12cb33e171dddfd816dd704b92873c7d367d8d1"
     },
     {
       "path": "assets/latest/scene.json",
-      "bytes": 14485,
-      "sha256": "f8d60b0403413c631d79601d8200a75ab280b3748023e44d660e637e57df8420"
+      "bytes": 14580,
+      "sha256": "90ab688247f7e4d5806c5a7e692d4e10c10a992e1f2b166ec2e94d7e935a918f"
     },
     {
       "path": "assets/latest/surface_model.tif",
-      "bytes": 194865,
-      "sha256": "28329a42e73b5c828210172de3fe58f7ec72c01346528b666bf0b8dd9059f7ac"
+      "bytes": 257543,
+      "sha256": "20b6e72fba30a144656db0b9b7aecf20be452b6092dfc2ddae868aa8a2de8256"
     },
     {
       "path": "assets/latest/trajectory.csv",

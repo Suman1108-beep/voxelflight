@@ -44,6 +44,8 @@ shutil.copy(run + "/model/dsm_utm.tif", out + "/surface_model.tif")
 
 # --- trajectory (keyframes) in the same local frame ---
 kp = np.load(run + "/keyframe_poses.npz"); c2w = kp["camera_to_world"]; vfr = kp["video_frame"]
+_, first = np.unique(vfr, return_index=True); first = np.sort(first)   # tiled runs hold one camera per crop: keep one per keyframe
+c2w, vfr = c2w[first], vfr[first]
 with open(out + "/trajectory.csv", "w") as f:
     f.write("frame_id,camera_x,camera_y,camera_z,source_frame,utm_easting,utm_northing,altitude_m\n")
     for i, (T, sf) in enumerate(zip(c2w, vfr)):
@@ -80,7 +82,7 @@ json.dump({"keyframes": int(K), "duration_s": round(nfr / fps, 1), "source_frame
            "web_mesh_voxel_m": vox, "timings": stages, "processing_wall_seconds": float(rep.get("processing_wall_seconds", sum(v for k, v in rep["stage_seconds"].items() if not k.startswith(" ")))),
            "parallel_stage_seconds": {k.strip(): float(v) for k, v in rep["stage_seconds"].items() if k.startswith(" ")},
            "runtime_scope": "Continuous end-to-end run on one A100: video on disk -> all six export formats.",
-           "mode": rep.get("mode", "fast"), "serial": rep.get("serial", False),
+           "mode": rep.get("mode", "fast"), "serial": rep.get("serial", False), "tiled": rep.get("tiled", False), "views": rep.get("views"), "time_is_sum_of_stages": rep.get("time_is_sum_of_stages", False),
            "quality_stage_marks": rep.get("quality_stage_marks"), "camera_solve_seconds": (rep.get("fast_sfm") or {}).get("seconds"),
            "geometry_coordinate_frame": f"Local metres from UTM origin {origin.round(3).tolist()} (EPSG:{epsg}); x=east, y=north, z=up",
            "utm_epsg": epsg, "utm_origin": origin.tolist(),
