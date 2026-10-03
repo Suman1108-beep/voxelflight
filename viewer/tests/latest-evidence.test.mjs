@@ -10,7 +10,7 @@ test('latest metrics come from independent references and keep absolute and shap
  assert.ok(e.absolute_camera_error.rmse_m>1,'consumer-GNSS absolute error is reported, not hidden');
  assert.ok(e.visible_completeness.recall_1m>0&&e.visible_completeness.recall_1m<1);
  const script=await read('latest-run.js');
- assert.match(script,/Consumer GNSS limit/);assert.doesNotMatch(script,/'Not measured'/);
+ assert.match(script,/Consumer GNSS/);assert.doesNotMatch(script,/'Not measured'/);
 });
 test('latest flight video, trajectory and selected frames share one real 10-minute sequence',async()=>{
  const s=JSON.parse(await read('assets/latest/scene.json'));

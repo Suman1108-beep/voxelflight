@@ -19,7 +19,7 @@ test('connection and accuracy limitations remain explicit after copy cleanup',as
   assert.match(html,/a cloud engine is not connected/);
   assert.match(html,/does not connect visitors to the site owner’s computer/);
   assert.match(html,/four source frames · accuracy unmeasured/);
-  assert.match(html,/accuracy validation pending/);
+  assert.match(html,/Live processing offline/);
   assert.match(html,/id="engine-start"[^>]*disabled/);
   assert.match(html,/href="http:\/\/127.0.0.1:8133\/engine.html"/);
 });

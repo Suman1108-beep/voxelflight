@@ -123,6 +123,31 @@ Tried and rejected (did not reliably improve absolute accuracy):
 | 2-D ICP to OpenStreetMap walls | 3.98 → 3.82 m |
 | Dense-model ICP to public LiDAR | 4.96 → 2.71 m on 60 s, but **worse** on 10 min (3.49 → 4.91 m), so not shipped |
 
+### 2d. Quality mode: photogrammetric cameras for consumer-GNSS flights (Zurich 10 min)
+
+Quality mode (`quality_pipeline.py`) replaces DPVO trajectory fusion with a photogrammetric camera solve:
+- **Matching:** every 2nd neural keyframe, undistorted; SuperPoint + LightGlue on the GPU.
+- **Solve:** COLMAP verification and incremental mapping.
+- **Lock:** each SfM model is locked to GNSS + barometer with a robust similarity.
+- **Interpolation:** the other keyframes' cameras are interpolated between their solved neighbours.
+- **Dense:** every MapAnything view is scaled to the tie points it sees. The same tiled GPU TSDF and the same exports follow.
+
+GNSS is only attached after the solve. Using it as a prior during the solve stalled registration at 4 of 360 images,
+because the GNSS here is off by 4–13 m.
+
+| Zurich 10 min (same video, same depth predictions) | DPVO fusion (`timed10-v2`) | Quality, full solve (`zurich-sfm-v1`) | **Quality, fast (`quality10-v1`)** |
+|---|---:|---:|---:|
+| Surface shape vs LiDAR, median | 0.91 m | 0.73 m | **0.70 m** |
+| Surface within 1 m / 2 m | 53 % / 76 % | 64 % / 89 % | **64 % / 85 %** |
+| Visible coverage within 1 m / 2 m | 24 % / 38 % | 29 % / 43 % | **30 % / 42 %** |
+| Coverage F-score at 1 m | 0.33 | 0.40 | **0.41** |
+| Camera absolute RMSE (H / V) | 3.49 m (3.24 / 1.30) | 2.65 m (2.27 / 1.37) | **2.76 m (2.46 / 1.26)** |
+| Camera path shape (Sim3) | 3.18 m | 2.28 m | **2.46 m** |
+| Camera solve | — | 360 frames, 2 models; CPU SIFT matching 311 s + solve 518 s | **180 frames, 1 model; GPU matching 48 s + solve 169 s (278 s in total)** |
+
+The share of the model that lies more than 2 m from the survey LiDAR fell from 24 % to 11–15 %. Most of that
+misplaced geometry was the duplicated "ghost" street caused by trajectory drift.
+
 ## 3. Coverage — "entire visible scene" (visibility-aware)
 
 Reference points = survey LiDAR points actually **visible** from at least one camera: in the field of view,

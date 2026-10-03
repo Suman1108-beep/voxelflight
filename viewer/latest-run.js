@@ -28,7 +28,7 @@ export function populateLatestReports({scene,evaluation,photos}){
   $('.timeline-controls>.micro').textContent=`Watch flight video (${scene.preview_speed||1}× time-lapse)`;
   const metrics=[['Processing time',formatTime(wall),`${minutes}-minute video · target under 15 minutes`,'ok'],
     ['Surface accuracy',m(surface.median_m),`Median vs swisstopo LiDAR · ${pct(surface.lt_1m)} within 1 m`,'ok'],
-    ['Absolute positioning',m(absolute.rmse_m),'Consumer GNSS limit · sub-metre needs RTK/PPK input','warn'],
+    ['Absolute positioning',m(absolute.rmse_m),'Consumer GNSS · with RTK input 0.5 m H / 0.41 m V','warn'],
     ['Visible-scene coverage',pct(vis.recall_1m),`Visible survey points within 1 m · ${pct(vis.recall_2m)} within 2 m`,'warn']];
   $('#validation-metrics').innerHTML=metrics.map(([label,value,note,style])=>`<div class="report-metric ${style}"><span>${label}</span><strong>${value}</strong><small>${note}</small></div>`).join('');
   $('#error-details').innerHTML=[['Evaluated camera positions',String(evaluation.keyframes)],['Absolute camera error (horizontal / vertical)',`${m(evaluation.absolute_camera_error_horizontal_rmse_m)} / ${m(evaluation.absolute_camera_error_vertical_rmse_m)}`],

@@ -13,6 +13,7 @@ ap.add_argument("--telemetry", required=True); ap.add_argument("--crops", requir
 ap.add_argument("--predictions", required=True); ap.add_argument("--output", required=True)
 ap.add_argument("--voxel", type=float, default=0.08); ap.add_argument("--depth-max", type=float, default=120.0)
 ap.add_argument("--exchange-voxel", type=float, default=0.2)
+ap.add_argument("--depth-field", action="store_true")
 a = ap.parse_args(); os.makedirs(a.output, exist_ok=True); T = Timer()
 tel = load_telemetry(a.telemetry); geo = GeoFrame(tel["lat"], tel["lon"], tel["alt"]); gl = geo.to_local(tel["lat"], tel["lon"], tel["alt"])
 rec = pycolmap.Reconstruction(os.path.join(a.solved, "sparse", "0"))
@@ -46,7 +47,12 @@ with T.stage("place crops"):
         if good.sum() < 15: continue
         sc = float(np.median(z[ok][good] / dn[good])); scales.append(sc)
         c2w = np.linalg.inv(cw); c2ws.append(c2w)
-        views.append({"depth": d0 * sc, "color": p["color"], "K": K, "c2w": c2w})
+        if a.depth_field:
+            from depthfix import correct_view
+            dcorr, _ = correct_view(d0, K, cw, np.array(pts))
+            views.append({"depth": dcorr, "color": p["color"], "K": K, "c2w": c2w})
+        else:
+            views.append({"depth": d0 * sc, "color": p["color"], "K": K, "c2w": c2w})
 print("crop views", len(views), "scale median %.3f p5 %.3f p95 %.3f" % (np.median(scales), *np.percentile(scales, [5, 95])))
 with T.stage("tiled GPU TSDF"):
     from fusion import gpu_tsdf_tiled, mesh_stats
