@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoxelFlight Viewer</title>
+<style>
+  :root { --bg:#0f1115; --panel:#181b22; --text:#e8eaf0; --muted:#9aa3b2; --accent:#4cc2ff; --warn:#ffb84c; --line:#2a2f3a; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#f4f6fa; --panel:#ffffff; --text:#151821; --muted:#5b6475; --accent:#0a7cc2; --warn:#a45f00; --line:#dde2ea; } }
+  :root[data-theme="light"] { --bg:#f4f6fa; --panel:#ffffff; --text:#151821; --muted:#5b6475; --accent:#0a7cc2; --warn:#a45f00; --line:#dde2ea; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; }
+  #app { display:flex; height:100%; }
+  #view { flex:1; position:relative; min-width:0; }
+  canvas { display:block; }
+  aside { width:330px; max-width:42vw; background:var(--panel); border-left:1px solid var(--line); padding:16px; overflow:auto; box-sizing:border-box; }
+  h1 { font-size:17px; margin:0 0 4px; } h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:18px 0 6px; }
+  .muted { color:var(--muted); } .warn { color:var(--warn); }
+  button, input[type=file]::file-selector-button { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:7px 11px; cursor:pointer; font:inherit; }
+  button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:6px 0; }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; } td { padding:3px 0; border-bottom:1px solid var(--line); } td:last-child { text-align:right; }
+  #hud { position:absolute; left:12px; bottom:12px; background:color-mix(in srgb, var(--panel) 88%, transparent); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-variant-numeric:tabular-nums; }
+  #drop { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:16px; }
+  @media (max-width: 720px) { #app { flex-direction:column; } aside { width:100%; max-width:none; height:45%; border-left:0; border-top:1px solid var(--line); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="view">
+    <div id="drop" class="muted">Load <b>model_mesh.glb</b> and <b>metadata.json</b> from a VoxelFlight run folder (<code>&lt;run&gt;/model/</code>).</div>
+    <div id="hud" hidden></div>
+  </div>
+  <aside>
+    <h1>VoxelFlight</h1>
+    <div class="muted">Single-pass drone video → georeferenced 3-D model</div>
+    <h2>Load</h2>
+    <div class="row"><input id="glb" type="file" accept=".glb,.gltf"></div>
+    <div class="row"><input id="meta" type="file" accept=".json"></div>
+    <h2>Measure</h2>
+    <div class="row"><button id="measure">Measure distance</button><button class="ghost" id="clear">Clear</button></div>
+    <div class="muted">Click two surface points. Units are metres (model is metric, from GNSS-scaled fusion).</div>
+    <table id="mtab"></table>
+    <h2>Picked point</h2>
+    <table id="ptab"><tr><td class="muted">Click the model</td><td></td></tr></table>
+    <h2>Model</h2>
+    <table id="info"></table>
+    <h2>Accuracy (measured, see RESULTS.md)</h2>
+    <table>
+      <tr><td>Model shape vs LiDAR (median)</td><td>0.5–0.9 m</td></tr>
+      <tr><td>Camera path shape, 60 s held-out</td><td>0.19 m</td></tr>
+      <tr><td>Absolute placement (consumer GNSS)</td><td class="warn">≈ 3.3 m</td></tr>
+    </table>
+    <div class="muted" style="margin-top:6px">Absolute placement follows the drone's GNSS. With RTK/PPK input it improves accordingly. Unseen surfaces (backsides, roofs above the camera) are left empty, never invented.</div>
+    <h2>View</h2>
+    <div class="row"><button class="ghost" id="reset">Reset view</button><button class="ghost" id="theme">Theme</button></div>
+  </aside>
+</div>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 5000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x404040, 1.6));
+let model = null, meta = null, measuring = false, picks = [], marks = [];
+const ray = new THREE.Raycaster();
+
+function bg() { scene.background = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()); }
+bg();
+function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+(function loop() { controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+
+const fmt = (x, d = 2) => Number(x).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+// glTF is Y-up: (x, y, z)_gltf = (E', U', -N') where E'/N'/U' are metres relative to the UTM origin
+const toUTM = p => meta ? [p.x + meta.utm_origin[0], -p.z + meta.utm_origin[1], p.y + meta.utm_origin[2]] : null;
+
+function frame() {
+  if (!model) return;
+  const box = new THREE.Box3().setFromObject(model), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3()).length();
+  controls.target.copy(c); camera.position.copy(c).add(new THREE.Vector3(0.35, 0.45, 0.35).multiplyScalar(s)); camera.near = s / 2000; camera.far = s * 10; camera.updateProjectionMatrix();
+}
+function setInfo() {
+  const rows = [];
+  if (model) { let tris = 0; model.traverse(o => { if (o.isMesh) tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; }); rows.push(['Triangles', fmt(tris, 0)]); }
+  if (meta) { rows.push(['CRS', 'EPSG:' + meta.utm_epsg]); rows.push(['Origin E / N', fmt(meta.utm_origin[0], 1) + ' / ' + fmt(meta.utm_origin[1], 1)]); rows.push(['Survey/LiDAR used', meta.survey_or_lidar_used ? 'yes' : 'no']); }
+  document.getElementById('info').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+}
+document.getElementById('glb').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  document.getElementById('drop').textContent = 'Loading ' + f.name + ' …';
+  new GLTFLoader().load(URL.createObjectURL(f), g => {
+    if (model) scene.remove(model);
+    model = g.scene;
+    model.traverse(o => { if (o.isMesh) { o.material.side = THREE.DoubleSide; if (o.geometry.attributes.color) { o.material.vertexColors = true; } } });
+    scene.add(model); frame(); setInfo(); document.getElementById('drop').hidden = true;
+  }, undefined, err => { document.getElementById('drop').textContent = 'Could not load: ' + err.message; });
+};
+document.getElementById('meta').onchange = async e => { const f = e.target.files[0]; if (!f) return; meta = JSON.parse(await f.text()); setInfo(); };
+document.getElementById('measure').onclick = () => { measuring = true; picks = []; document.getElementById('hud').hidden = false; document.getElementById('hud').textContent = 'Pick first point'; };
+document.getElementById('clear').onclick = () => { marks.forEach(m => scene.remove(m)); marks = []; picks = []; document.getElementById('mtab').innerHTML = ''; document.getElementById('hud').hidden = true; };
+document.getElementById('reset').onclick = frame;
+document.getElementById('theme').onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light'; bg(); };
+
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!model || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
+  const hit = ray.intersectObject(model, true)[0]; if (!hit) return;
+  const p = hit.point, u = toUTM(p);
+  document.getElementById('ptab').innerHTML = u
+    ? `<tr><td>Easting</td><td>${fmt(u[0])} m</td></tr><tr><td>Northing</td><td>${fmt(u[1])} m</td></tr><tr><td>Height</td><td>${fmt(u[2])} m</td></tr>`
+    : `<tr><td>Local x, y, z</td><td>${fmt(p.x)}, ${fmt(-p.z)}, ${fmt(p.y)}</td></tr><tr><td class="muted" colspan="2">Load metadata.json for UTM</td></tr>`;
+  if (!measuring) return;
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.15), new THREE.MeshBasicMaterial({ color: 0xff3b6b, depthTest: false }));
+  dot.position.copy(p); dot.renderOrder = 9; scene.add(dot); marks.push(dot); picks.push(p.clone());
+  if (picks.length === 2) {
+    const [a, b] = picks, d = a.distanceTo(b), dh = Math.hypot(a.x - b.x, a.z - b.z), dz = Math.abs(a.y - b.y);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a, b]), new THREE.LineBasicMaterial({ color: 0xff3b6b, depthTest: false }));
+    line.renderOrder = 9; scene.add(line); marks.push(line);
+    document.getElementById('mtab').innerHTML = `<tr><td>3-D distance</td><td><b>${fmt(d)} m</b></td></tr><tr><td>Horizontal</td><td>${fmt(dh)} m</td></tr><tr><td>Height difference</td><td>${fmt(dz)} m</td></tr>`;
+    document.getElementById('hud').textContent = `${fmt(d)} m`; measuring = false;
+  } else document.getElementById('hud').textContent = 'Pick second point';
+});
+</script>
+</body>
+</html>

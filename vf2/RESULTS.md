@@ -1,0 +1,185 @@
+# VoxelFlight v2 — measured results (3 Oct 2026, one A100-SXM4-40GB, shared host)
+
+**Protocol for every number:** the pipeline reads only drone video + per-frame GNSS (+ barometer if present) +
+optional calibration. Outputs are frozen first. Reference data — Zurich reference camera poses, swisstopo
+swissSURFACE3D LiDAR (Zurich) and USGS 3DEP LiDAR (Toledo) — are opened only afterwards by
+`evaluate_run.py` / `evaluate_aerial.py`. They are never pipeline inputs. Run folders live on the A100 under
+`/workspace/voxelflight_a100_20260928/vf2/runs/`.
+
+Three test flights:
+
+| Flight | Type | Duration | Role |
+|---|---|---|---|
+| Zurich MAV 40001–58000 | street-level (≈8 m), sideways camera, 1080p, GNSS + barometer | 10 min | speed + long-flight accuracy |
+| Zurich MAV 20001–21800 | same platform, different streets | 60 s | **held-out** (never used for tuning v2) |
+| OpenDroneMap Toledo (Ohio) | **aerial** (≈120 m), nadir, DJI Phantom 3, one flight (48 frames, 8 min) | 8 min | roofs + roads, second continent, second survey |
+
+Both Zurich videos are H.264 encodes of the official image sequences; the Toledo "video" is one flight's
+geotagged stills in capture order (1 fps). None is an original camera video file.
+
+## 1. Processing time (target: < 15 min for a 10-min video)
+
+| Run | Wall time, video on disk → all six formats | Result |
+|---|---:|---|
+| `timed10-v2` (10 min, 360 keyframes) | **427.8 s = 7 min 8 s** (0.71× real time) | ✅ |
+| `timed10-v1` (same, before removing redundant CPU packaging) | 684.3 s = 11 min 24 s | ✅ |
+| `final10` (10 min, 540 keyframes) | stage 1 = 333 s; fusion re-run after a fix, so not timed (§6) | — |
+| `heldout60-v1` (60 s) | 152.3 s | |
+| `toledo-aerial-v1` (48 aerial frames, full pipeline) | 70.4 s | |
+
+Stage profile of `timed10-v2`: DPVO 167 s running in parallel with MapAnything 251 s · fusion + snapping 7.7 s ·
+tiled GPU TSDF 105 s · exports 64 s. Before v2, CPU fusion alone took 268 s (baseline) and 4,072 s (DPVO run).
+
+## 2. Spatial accuracy (target: ≤ 1 m)
+
+"Spatial accuracy" is not defined further in the problem statement, so both readings are reported.
+
+### 2a. Model geometry (shape/measurement accuracy) — ✅ median ≤ 1 m on every flight
+
+Surface distance from the model to independent survey LiDAR, after one evaluation-only rigid alignment
+(isolates the model's geometry from where the GNSS placed it — the surface analogue of Sim3 for cameras).
+
+| Flight | Median error | Within 1 m | Within 2 m | Reference |
+|---|---:|---:|---:|---|
+| Zurich held-out 60 s | **0.55 m** | 78 % | 95 % | swisstopo LiDAR 2018 |
+| Zurich 10 min | **0.90 m** | 53 % | 77 % | swisstopo LiDAR 2018 |
+| Toledo aerial — all surfaces | **0.85 m** | 60 % | 94 % | USGS 3DEP LiDAR 2016 |
+| Toledo aerial — **roofs** | **0.90 m** | 59 % | — | USGS 3DEP |
+| Toledo aerial — **ground / roads** | **0.83 m** | 60 % | — | USGS 3DEP |
+
+Camera-path shape (Sim3 vs Zurich reference): **0.19 m** RMSE on the held-out 60 s; 3.13 m over 10 min (slow drift).
+Airborne LiDAR samples building façades sparsely, so façade-heavy street-level surfaces score pessimistically.
+
+### 2b. Absolute position with consumer GNSS — ❌ not ≤ 1 m (with RTK it is; see 2c)
+
+| Flight | Absolute error | How measured |
+|---|---:|---|
+| Zurich 10 min | **3.43 m** RMSE (H 3.17, V 1.30) | camera centres vs Zurich reference, no fitting |
+| Zurich held-out 60 s | 4.96 m RMSE (H 3.75, V 3.25*) | same |
+| Toledo aerial | **3.13 m** horizontal | model offset to USGS LiDAR |
+
+\* this segment's GNSS altitude is biased ≈ 3 m.
+
+Measured error sources: raw onboard GNSS 4.3 m horizontal / 6.1 m vertical; barometer 1.4 m vertical; DPVO
+0.28 m over any 60 s window but ±7 % scale drift over 10 min. Fusion takes 7.5 m → 3.4 m. Two independent
+surveys on two continents agree that the remaining ≈ 3 m is GNSS placement, not model geometry.
+**Sub-metre absolute placement requires the optional RTK/PPK input** (same telemetry columns, small
+`gps_eph_m`) or ground control. Not demonstrated: no RTK data was available.
+
+### 2c. Absolute position **with the optional RTK input** — ✅ ≤ 1 m (horizontal and vertical)
+
+Flight: OpenDroneMap `odm_data_helenenschacht`, Burgenland, Austria. Autel EVO II RTK, 176 photos over 8 min,
+≈50 m above ground, camera pitch −80°, **RTK fixed on every photo** (reported σ 1.4 cm horizontal, 3 cm vertical).
+The RTK positions are fed in through the normal telemetry columns (`gps_eph_m` = RTK σ).
+RTK mode (`rtk_photogrammetry.py`): SIFT features, matching of RTK-neighbouring photos, incremental SfM with RTK position
+priors (COLMAP), similarity lock to RTK, then MapAnything depth rescaled per view to the solved geometry and fused on the GPU.
+
+Independent reference: **BEV ALS DSM 2023, 1 m** (Austria's official airborne-LiDAR surface model, CC-BY-4.0),
+never a pipeline input. Heights converted ellipsoidal → EGM2008 (N = 45.7 m).
+
+| Metric | RTK + MapAnything poses (`helen-rtk-v1`) | **RTK + photogrammetry (`helen-rtk-v3`)** |
+|---|---:|---:|
+| Photos with solved cameras | — | **176 / 176**, reprojection 0.76 px, 53,387 tie points |
+| Cameras vs RTK positions | 4.04 m (snap residual) | **0.08 m median**, 0.16 m p95 |
+| **Horizontal absolute** (building-edge registration, 0.5 m grid) | 2.1 m | **0.5 m** |
+| **Vertical absolute** (tie points vs DSM; median, spread) | — | **0.41 m**, MAD 0.38 m |
+| Dense surface vs DSM after rigid ICP (median) | 1.43 m | 1.45 m |
+| Visible recall within 1 m: roads / roofs / all | 78 % / 42 % / 59 % | 72 % / 30 % / 49 % |
+
+Reading: with RTK, **placement is sub-metre** in both axes. The dense surface on this oblique flight is noisier
+than the tie points: MapAnything depth bends at oblique angles, and one scale per view cannot fully correct that.
+A rigid ICP against a 2.5-D, vegetated DSM can slide (it reported 2.3 m for v3), so building edges are used for
+the horizontal figure. The edge test is sensitive: it detects the 2.1 m offset of v1.
+
+#### Optional tiled inference (coverage experiment, `helen-tiled`)
+
+Each photo is split into 2×2 overlapping crops (60 % of width/height each). That gives 704 views, each with about 2.8× the
+pixel area at MapAnything's 518 px input. Crops reuse the parent photo's RTK-locked camera with shifted intrinsics
+(`make_crops.py`, `dense_from_crops.py`).
+
+| RTK flight vs BEV DSM | Untiled (`helen-rtk-v3`) | Tiled (`helen-tiled`) |
+|---|---:|---:|
+| Visible recall < 1 m: roads / roofs / all | 72 % / 30 % / 49 % | 72 % / **37 %** / **52 %** |
+| Visible recall < 2 m: all | 60 % | **64 %** |
+| Dense precision (median) | 1.45 m | 1.45 m |
+| Horizontal placement (edges, 0.5 m grid) | 0.5 m | 1.0 m |
+| Mesh triangles | 39.9 M | 50.6 M |
+| Inference cost | 1× | ≈ 4× |
+
+Tiling mainly improves roofs (+7 points within 1 m), at four times the inference cost. It is offered as an optional
+high-detail mode, not the default.
+
+A ghost-layer filter was also tried on the 10-minute run: it drops views or points that reach implausibly far
+below the camera (`snap.ghost_gate`). It removed only 25 of 18.2 M triangles, so it did not fix the duplicated street
+visible in the 10-minute model. That duplicate is most likely slow trajectory drift that places one street twice.
+Fixing it needs loop closure or anchoring, which is not done.
+
+Tried and rejected (did not reliably improve absolute accuracy):
+
+| Attempt | Result |
+|---|---|
+| Global bundle adjustment (SuperPoint + LightGlue, 1,200 keyframes, Ceres) | 3.91 → 3.63 m Sim3, 808 s per pass |
+| Sparse-feature ICP to public LiDAR | worse, 4.1 → 4.9 m |
+| 2-D ICP to OpenStreetMap walls | 3.98 → 3.82 m |
+| Dense-model ICP to public LiDAR | 4.96 → 2.71 m on 60 s, but **worse** on 10 min (3.49 → 4.91 m), so not shipped |
+
+## 3. Coverage — "entire visible scene" (visibility-aware)
+
+Reference points = survey LiDAR points actually **visible** from at least one camera: in the field of view,
+within range, facing the camera, not occluded (GPU z-buffer). Recall = share of those reconstructed within
+the threshold, after the same evaluation-only rigid alignment.
+
+| Flight | Class | Visible survey points | Recall within 1 m | Recall within 2 m |
+|---|---|---:|---:|---:|
+| Toledo aerial (`toledo-aerial-w1`) | **ground / roads** | 158,598 | **56 %** | **77 %** |
+| | **roofs** | 30,985 | 27 % | 46 % |
+| | other (walls, trees) | 85,821 | 36 % | 56 % |
+| | all | 275,404 | 47 % | 67 % |
+| Zurich held-out 60 s (360 keyframes, single-view kept) | all | ≈ 20,000 | 38 % | 49 % |
+
+F-score at 1 m: Toledo 0.52; Zurich held-out 0.51.
+Street-level flights cannot see roofs above the camera or roads behind buildings. Those surfaces are left
+empty, never invented. On a normal aerial pass, roofs and roads are reconstructed (table above).
+
+## 4. Output formats — every file reopened with an independent reader (`verify_exports.py`)
+
+| Format | Reader | Result (`timed10-v1`) |
+|---|---|---|
+| PLY mesh | Open3D | ✅ 17.9 M triangles |
+| PLY points | Open3D | ✅ |
+| OBJ | trimesh | ✅ 3.91 M triangles (exchange mesh) |
+| GLB | trimesh | ✅ vertex colours |
+| FBX (binary 7.4, own writer) | Assimp | ✅ 3,913,314 faces |
+| LAS | laspy | ✅ EPSG:32632 |
+| GeoTIFF DSM 0.25 m | rasterio | ✅ EPSG:32632 |
+
+Toledo aerial run: all formats ✅ (UTM 17N).
+
+## 5. Robustness
+
+| Check | Result |
+|---|---|
+| Held-out flight, frozen settings | ✅ runs; 0.19 m path shape, 0.55 m surface median |
+| Second continent and platform (DJI Phantom 3, aerial) | ✅ runs |
+| 4K input (3840×2160, 60 s, 1,800 frames; bicubic-upscaled from 1080p, so tests decode/memory/runtime, not 4K detail) | ✅ full pipeline in 175.9 s (1080p: 152.3 s) |
+| Low-frame-rate stills (1 fps) | ✅ via `--vo mapanything` |
+| Scene size | ✅ tiled GPU fusion with bounded memory: Toledo used 35 tiles, the 10-min flight 12 |
+
+## 6. Final 10-minute run (`final10b`: 540 keyframes, single-view surfaces kept)
+
+Inference and DPVO ran in run `final10` (333 s for both, in parallel); fusion + exports were re-run in
+`final10b` after fixing a crash: views with no pixels inside the depth range are now skipped. Because two runs
+were combined, this is **not** a timed result. The timed result remains `timed10-v2` (427.8 s).
+
+| Metric | Result |
+|---|---|
+| Mesh | 27.2 M triangles; exchange mesh 5.88 M |
+| Exports | 7/7 reopened (FBX 5,879,786 faces in Assimp; LAS + GeoTIFF EPSG:32632) |
+| Camera absolute (direct) | 3.44 m RMSE (H 3.18, V 1.32) |
+| Camera shape (Sim3) | 3.13 m |
+| Surface shape vs swisstopo LiDAR (eval-only rigid alignment) | **median 0.90 m**; 53 % < 1 m; **79 % < 2 m** |
+| Visible-scene recall | 29 % < 1 m; 45 % < 2 m; F-score at 1 m 0.38 |
+
+The heavier settings did not improve 10-min geometry over `timed10-v1` (median 0.90 m both). Over 10 min,
+slow drift spreads surfaces that one rigid alignment cannot fully register. That is why recall here is lower
+than on the 60 s held-out flight (38 %).

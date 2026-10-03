@@ -168,3 +168,18 @@ Reference poses enter evaluation only. The aligned camera-path score removes glo
 [References and attribution](docs/references.md) credit the models, libraries and Zurich Urban MAV data. Third-party licenses remain in force. No blanket relicensing is implied. [LICENSE](LICENSE) records the current project licensing status.
 
 No credentials, private user jobs, model caches or private Git history are included.
+
+## VoxelFlight v2 (3 October 2026): A100 pipeline and measured results
+
+The `vf2/` folder holds the A100 pipeline built after the September submission (`vf2/README.md` explains how to run it).
+Every number below is measured against reference data the pipeline never reads (`vf2/RESULTS.md` has the full protocol):
+
+| Target | Result |
+|---|---|
+| < 15 min for a 10-min video | **7 min 8 s** end to end on one A100 (video → OBJ, PLY, LAS, GeoTIFF DSM, GLB, FBX) |
+| Spatial accuracy, model geometry | 0.55 m (held-out), 0.85 m (aerial) and 0.91 m (10 min) median vs national airborne LiDAR |
+| Spatial accuracy, absolute | 0.5 m horizontal / 0.41 m vertical with RTK input; ≈ 3.5 m with consumer GNSS |
+| Visible-scene coverage | 24–59 % of visible survey points within 1 m (roads up to 72–78 %); unseen surfaces left empty |
+
+The public demo at <https://voxelflight-3d.web.app/workspace> shows the 10-minute run. Uploading a new video is not
+connected to the A100: the hosted processing service is offline.
