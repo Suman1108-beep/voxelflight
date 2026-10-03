@@ -77,9 +77,11 @@ stages = {k: float(v) for k, v in rep["stage_seconds"].items() if not k.startswi
 json.dump({"keyframes": int(K), "duration_s": round(nfr / fps, 1), "source_frames": nfr, "run_date": "2026-10-03", "run_id": os.path.basename(run.rstrip("/")),
            "thumbnail_frames": thumbs, "frame_times": [float(sf / fps / SPEED) for sf in vfr], "preview_speed": SPEED,
            "point_count": int(len(P)), "web_point_count": int(len(Ps)), "mesh_triangles": int(full_tris), "web_mesh_triangles": int(len(F)),
-           "web_mesh_voxel_m": vox, "timings": stages, "processing_wall_seconds": float(rep["processing_wall_seconds"]),
+           "web_mesh_voxel_m": vox, "timings": stages, "processing_wall_seconds": float(rep.get("processing_wall_seconds", sum(v for k, v in rep["stage_seconds"].items() if not k.startswith(" ")))),
            "parallel_stage_seconds": {k.strip(): float(v) for k, v in rep["stage_seconds"].items() if k.startswith(" ")},
            "runtime_scope": "Continuous end-to-end run on one A100: video on disk -> all six export formats.",
+           "mode": rep.get("mode", "fast"), "serial": rep.get("serial", False),
+           "quality_stage_marks": rep.get("quality_stage_marks"), "camera_solve_seconds": (rep.get("fast_sfm") or {}).get("seconds"),
            "geometry_coordinate_frame": f"Local metres from UTM origin {origin.round(3).tolist()} (EPSG:{epsg}); x=east, y=north, z=up",
            "utm_epsg": epsg, "utm_origin": origin.tolist(),
            "provenance": "Zurich Urban MAV images 40001-58000 encoded as a 10-minute 1080p H.264 video; onboard GPS + barometer. "

@@ -46,7 +46,7 @@ function setMode(value){
   $('#geometry-settings').hidden=mode!=='geometry';$('#appearance-settings').hidden=mode!=='appearance';
   document.body.dataset.mode=mode;
   $('#stage-mode').textContent=mode==='video'?'Watch the flight':mode==='geometry'?'Explore the reconstruction':'Earlier appearance experiment';
-  $('#result-explanation').textContent=imported?'Your local model. Scale, coverage and accuracy have not been verified.':mode==='video'?'The real 10-minute flight (4× time-lapse preview), encoded from the official camera images. Next, explore the 3D surface reconstructed from this sequence.':mode==='geometry'?'Latest surface, reconstructed from 360 views of a 10-minute flight. Unseen regions remain open; shape is about 0.9 m median against survey LiDAR.':'Archived Gaussian-render comparison from the earlier 180-view run. These image scores do not describe the latest 3D mesh.';
+  $('#result-explanation').textContent=imported?'Your local model. Scale, coverage and accuracy have not been verified.':mode==='video'?'The real 10-minute flight (4× time-lapse preview), encoded from the official camera images. Next, explore the 3D surface reconstructed from this sequence.':mode==='geometry'?'High-quality surface, reconstructed from 719 views of a 10-minute flight. Unseen regions remain open; shape is about 0.6 m median against survey LiDAR.':'Archived Gaussian-render comparison from the earlier 180-view run. These image scores do not describe the latest 3D mesh.';
   $('#scout-hint').innerHTML=mode==='video'?'Play the real flight.<br>Then explore in 3D.':mode==='geometry'?'Drag to orbit.<br>Scroll to explore.':'Slide to compare.<br>Earlier experiment.';
   $('#reset-view').disabled=mode!=='geometry'||!ready;
   if(mode==='geometry'){viewer?.resize();if(run&&!ready)ensureViewer();}else if(mode==='appearance')selectWindow(windowIndex);
@@ -91,7 +91,7 @@ function measurement(value){
   if(value.pending){$('#measure-result').textContent='First point set. Select the second.';return;}
   const text=`${value.distance.toFixed(2)} ${imported?'model units':'m'}`;
   $('#measure-result').textContent=text;$('#measure-label').textContent=text;$('#measure-label').hidden=false;
-  status(imported?'Measured in file units; physical scale is unknown.':'Distance in metres. Model shape is about 0.9 m median against survey LiDAR; absolute placement follows GNSS.');
+  status(imported?'Measured in file units; physical scale is unknown.':'Distance in metres. Model shape is about 0.6 m median against survey LiDAR; absolute placement follows GNSS.');
 }
 $('#measure-button').addEventListener('click',()=>{if(!ready)return toast('Wait for the 3D model to load.');if(!viewer.stats().triangles)return toast('Point picking requires a surface mesh.');setMode('geometry');const active=!viewer.measuring;viewer.setMeasuring(active);$('#measure-button').classList.toggle('active',active);$('#measure-button').setAttribute('aria-pressed',String(active));$('#measure-result').textContent=active?'Select the first point on the mesh.':'Pick two locations on the mesh.';});
 $('#clear-measure').addEventListener('click',()=>{viewer?.setMeasuring(false);viewer?.clearMeasurement();});
