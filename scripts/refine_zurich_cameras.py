@@ -17,6 +17,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--dataset',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--frames',type=int,default=90);p.add_argument('--width',type=int,default=1280)
+    p.add_argument('--threads',type=int,default=4);p.add_argument('--max-runtime',type=int,default=600)
     a=p.parse_args()
     if a.output.exists() and any(a.output.iterdir()):raise ValueError('Output must be new or empty.')
     source=sorted((a.dataset/'MAV Images').glob('*.jpg'))
@@ -44,18 +45,18 @@ def main():
     (a.output/'camera.json').write_text(json.dumps(config,indent=2)+'\n')
     reader=pycolmap.ImageReaderOptions();reader.camera_model='PINHOLE'
     reader.camera_params=','.join(str(x) for x in [scaled_k[0,0],scaled_k[1,1],scaled_k[0,2],scaled_k[1,2]])
-    extraction=pycolmap.FeatureExtractionOptions();extraction.num_threads=4;extraction.max_image_size=a.width
+    extraction=pycolmap.FeatureExtractionOptions();extraction.num_threads=a.threads;extraction.max_image_size=a.width
     extraction.sift.max_num_features=6000
     database=a.output/'database.db'
     pycolmap.extract_features(database,images,camera_mode=pycolmap.CameraMode.SINGLE,
         reader_options=reader,extraction_options=extraction,device=pycolmap.Device.cpu)
-    matching=pycolmap.FeatureMatchingOptions();matching.num_threads=4;matching.guided_matching=True
+    matching=pycolmap.FeatureMatchingOptions();matching.num_threads=a.threads;matching.guided_matching=True
     pairing=pycolmap.SequentialPairingOptions();pairing.overlap=10;pairing.quadratic_overlap=True
     pycolmap.match_sequential(database,matching_options=matching,pairing_options=pairing,device=pycolmap.Device.cpu)
-    options=pycolmap.IncrementalPipelineOptions();options.num_threads=4;options.random_seed=17
+    options=pycolmap.IncrementalPipelineOptions();options.num_threads=a.threads;options.random_seed=17
     options.ba_refine_focal_length=False;options.ba_refine_principal_point=False;options.ba_refine_extra_params=False
     options.mapper.abs_pose_refine_focal_length=False;options.mapper.abs_pose_refine_extra_params=False
-    options.max_runtime_seconds=600;options.min_model_size=8
+    options.max_runtime_seconds=a.max_runtime;options.min_model_size=8
     options.mapper.init_min_tri_angle=8.
     sparse=a.output/'sparse';sparse.mkdir()
     reconstructions=pycolmap.incremental_mapping(database,images,sparse,options=options)

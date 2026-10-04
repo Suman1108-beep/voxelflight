@@ -1,0 +1,66 @@
+{
+  "protocol": "ETH3D courtyard sampled nearest-neighbour proxy, NOT official ETH3D evaluator",
+  "reconstruction": "Images only; reference cameras and scans withheld until this post-hoc evaluation",
+  "alignment": "One global Sim(3) fit to reference camera centres for evaluation only",
+  "not_sih_compliance": true,
+  "not_absolute_georeference": true,
+  "camera_sim3_rmse_m": 0.6290609292405828,
+  "evaluation_scale": 1.5545107461837873,
+  "reconstructed_points_total": 375787,
+  "reconstructed_points_sampled": 200000,
+  "scan_points_total": 34454474,
+  "scan_points_sampled": 200000,
+  "accuracy_distance_quantiles_m": {
+    "0.5": 0.38968687414535796,
+    "0.9": 1.2868599672377097,
+    "0.95": 1.4969269565146126
+  },
+  "completeness_distance_quantiles_m": {
+    "0.5": 0.41997491441161844,
+    "0.9": 1.4501680289413463,
+    "0.95": 1.9050556951463717
+  },
+  "thresholds_m": {
+    "0.05": {
+      "accuracy_fraction": 0.015955,
+      "completeness_fraction": 0.01831,
+      "f1": 0.01705157157449292
+    },
+    "0.1": {
+      "accuracy_fraction": 0.070325,
+      "completeness_fraction": 0.07089,
+      "f1": 0.07060636971993062
+    },
+    "0.25": {
+      "accuracy_fraction": 0.29461,
+      "completeness_fraction": 0.3055,
+      "f1": 0.29995619136491647
+    },
+    "0.5": {
+      "accuracy_fraction": 0.653565,
+      "completeness_fraction": 0.5993,
+      "f1": 0.625257317428454
+    },
+    "1.0": {
+      "accuracy_fraction": 0.844415,
+      "completeness_fraction": 0.791955,
+      "f1": 0.8173440986146165
+    }
+  },
+  "source_sha256": {
+    "geometry_report.json": "424daf57734e1062fd8e050cf899acdcb8312ae0e52232a492cc01b9b5e8e315",
+    "geometry_pointcloud.ply": "7dad7c296d0ea6ef3fe0b3ca455a3d390d33a7d1124e75a78f76d4cad9e7679c",
+    "pose_report.json": "097246c611b3c34ccc11eb28fb536bc531dc2ec281317070f914cb68665d7ebd",
+    "pose_camera_poses.npz": "86e093c9db446e3708a0f4a7764e613edb400d0251bd1484a18131485583953c"
+  },
+  "reference_sha256": {
+    "scan2.ply": "fc7a9e3171c5379b09853f641189d3ec19f80ebe348120fd66dd1d676e4e1937",
+    "scan1.ply": "9981e7043925d7844de435478d176ade202593ddbefe69f689e6b741c32d62fc"
+  },
+  "limitations": [
+    "ETH3D DSLR courtyard is not a single-pass drone video and has no GPS.",
+    "Camera-reference Sim(3) alignment is post-hoc and cannot be used in deployment.",
+    "Sampling and nearest-neighbour distances omit the official evaluator free-space model.",
+    "The reference scans may cover surfaces outside the reconstructed views."
+  ]
+}

@@ -1,6 +1,11 @@
 import unittest
 import numpy as np
-from mac_refuse import rasterize_prediction, unproject, multiview_support
+from pathlib import Path
+import argparse
+import json
+import tempfile
+from unittest.mock import patch
+from mac_refuse import rasterize_prediction, unproject, multiview_support, run
 
 
 class RefusionTests(unittest.TestCase):
@@ -33,6 +38,40 @@ class RefusionTests(unittest.TestCase):
         opposite=self.view();opposite['pose'][:3,:3]=np.diag([-1,1,-1])
         counts,_,_=multiview_support([self.view(),opposite])
         self.assertFalse(counts[0].any())
+
+    def test_temporal_neighbor_radius_excludes_distant_view(self):
+        views=[self.view(5.),self.view(8.),self.view(8.),self.view(8.),self.view(5.)]
+        all_counts,_,_=multiview_support(views)
+        local_counts,_,_=multiview_support(views,neighbor_radius=1)
+        self.assertGreater(np.count_nonzero(all_counts[0]),0)
+        self.assertFalse(local_counts[0].any())
+
+    def test_invalid_neighbor_radius_is_rejected(self):
+        with self.assertRaises(ValueError):
+            multiview_support([self.view()],neighbor_radius=0)
+
+    def test_zero_support_skips_expensive_crossview_check(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);source=root/'source';(source/'predictions').mkdir(parents=True)
+            (source/'report.json').write_text(json.dumps(dict(
+                ground_truth_used=False,model='test',device='cpu',runtime_s=0.,
+                input={'input_type':'test'},window_size=2)))
+            for i,shift in enumerate((0.,.1)):
+                view=self.view(depth=5.,shift=shift)
+                view['depth']=np.full((30,30),5.,np.float32)
+                view['color']=np.full((30,30,3),100,np.uint8)
+                view['intrinsics']=np.array([[30.,0,14.5],[0,30.,14.5],[0,0,1.]])
+                np.savez(source/'predictions'/f'frame_{i:05d}.npz',
+                         **view,mask=np.ones((30,30),bool),points=unproject(view))
+            args=argparse.Namespace(input=source,output=root/'output',voxel=.1,
+                min_support=0,relative_tolerance=.015,absolute_tolerance=.08,
+                max_depth=80.,min_component_triangles=1,view_stride=1,
+                neighbor_radius=1)
+            with patch('mac_refuse.multiview_support',side_effect=AssertionError('must not be called')):
+                report=run(args)
+            self.assertTrue(report['support_validation_skipped'])
+            self.assertIsNone(report['supported_fraction'])
+            self.assertEqual(report['retained_fraction'],1.)
 
 
 if __name__=='__main__':unittest.main()

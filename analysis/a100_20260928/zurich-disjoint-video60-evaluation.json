@@ -1,0 +1,27 @@
+{
+  "protocol": "Frozen video/GPS camera poses; reference loaded only for post-hoc scoring",
+  "run_report_sha256": "6dbace617459da4ecfb25ac83ab4b031d4b42b83bbec9f97f4661f4ca86e9868",
+  "reference_sha256": "50e95abc70461567a915a76ba17231ae3088b834dbcb433737135eacb9c9c552",
+  "video_duration_s": 60.0,
+  "keyframes": 180,
+  "source_image_ids": [
+    20001,
+    21800
+  ],
+  "sim3_aligned_camera_error_m": {
+    "rmse_m": 0.34799271172037005,
+    "median_m": 0.3446849559089191,
+    "p95_m": 0.4905882726869543,
+    "max_m": 0.6004672201080694
+  },
+  "sim3_evaluation_scale": 1.0480764548307289,
+  "surface_rmse_m": null,
+  "sih_spatial_accuracy_verified": false,
+  "warning": "Camera trajectory error is not mesh surface error. Sim(3) uses withheld reference only for evaluation.",
+  "direct_absolute_camera_error_m": {
+    "rmse_m": 6.331361007800999,
+    "median_m": 6.099454847606134,
+    "p95_m": 8.742859868682732,
+    "max_m": 9.221593959880957
+  }
+}

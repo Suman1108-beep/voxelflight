@@ -91,7 +91,15 @@ def main() -> int:
 
     copied_logs = args.output_root / "telemetry"
     copied_logs.mkdir(exist_ok=True)
+    input_logs = {
+        "OnboardGPS.csv", "OnboardPose.csv", "BarometricPressure.csv",
+        "RawAccel.csv", "RawGyro.csv",
+    }
     for source in log_dir.glob("*.csv"):
+        # Keep only onboard sensor logs. GroundTruth* and StreetViewGPS are
+        # evaluation/reference data, not reconstruction inputs.
+        if source.name not in input_logs:
+            continue
         target = copied_logs / source.name
         if not target.exists():
             shutil.copy2(source, target)

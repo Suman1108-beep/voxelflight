@@ -53,12 +53,15 @@ def unproject(view):
     return (rays*d[..., None]) @ pose[:3, :3].T+pose[:3, 3]
 
 
-def multiview_support(views, relative_tolerance=.015, absolute_tolerance=.08):
+def multiview_support(views, relative_tolerance=.015, absolute_tolerance=.08,
+                      neighbor_radius=None):
     """Count other views agreeing in depth; report internal consistency only.
 
     Out-of-frustum and occluded observations do not count as agreements. The
     source view never votes for itself. All candidate maps are frozen throughout.
     """
+    if neighbor_radius is not None and neighbor_radius < 1:
+        raise ValueError('Neighbor radius must be positive or omitted.')
     counts, observations, errors = [], [], []
     for i, source in enumerate(views):
         points = unproject(source).reshape(-1, 3)
@@ -66,9 +69,12 @@ def multiview_support(views, relative_tolerance=.015, absolute_tolerance=.08):
         support = np.zeros(len(points), np.uint16)
         observed = np.zeros(len(points), np.uint16)
         residuals = []
-        for j, target in enumerate(views):
+        first = max(0, i-neighbor_radius) if neighbor_radius is not None else 0
+        last = min(len(views), i+neighbor_radius+1) if neighbor_radius is not None else len(views)
+        for j in range(first, last):
             if i == j:
                 continue
+            target = views[j]
             pose, k = target['pose'], target['intrinsics']
             camera = (points-pose[:3, 3]) @ pose[:3, :3]
             positive = valid_source & (camera[:, 2] > .05)
@@ -100,6 +106,9 @@ def run(args):
     if args.output.exists() and any(args.output.iterdir()):
         raise ValueError('Refusing to overwrite existing geometry.')
     paths = sorted((args.input/'predictions').glob('frame_*.npz'))
+    if args.view_stride < 1:
+        raise ValueError('View stride must be positive.')
+    paths = paths[::args.view_stride]
     if len(paths) < 2:
         raise ValueError('Need at least two cached predicted views (--save-predictions).')
     if args.voxel <= 0 or args.min_support < 0:
@@ -112,14 +121,22 @@ def run(args):
     for path in paths:
         with np.load(path) as pred:
             views.append(rasterize_prediction(pred, args.max_depth))
-    print(f'Checking cross-view depth agreement across {len(views)} actual predictions', flush=True)
-    counts, observations, errors = multiview_support(views, args.relative_tolerance, args.absolute_tolerance)
     before = sum(int(np.count_nonzero(v['depth'])) for v in views)
-    after = 0
-    for i, (view, support) in enumerate(zip(views, counts)):
-        view['depth'][support < args.min_support] = 0
-        after += int(np.count_nonzero(view['depth']))
-        np.savez_compressed(args.output/f'support_{i:05d}.npz', support=support, visible=observations[i])
+    if args.min_support == 0:
+        # No pixel can fail a zero-support threshold. Avoid an otherwise costly
+        # O(views × neighbours × pixels) pass that cannot change the geometry.
+        print('No multiview support filter requested; integrating all valid depths', flush=True)
+        after = before
+        errors = [None] * len(views)
+    else:
+        print(f'Checking cross-view depth agreement across {len(views)} actual predictions', flush=True)
+        counts, observations, errors = multiview_support(
+            views, args.relative_tolerance, args.absolute_tolerance, args.neighbor_radius)
+        after = 0
+        for i, (view, support) in enumerate(zip(views, counts)):
+            view['depth'][support < args.min_support] = 0
+            after += int(np.count_nonzero(view['depth']))
+            np.savez_compressed(args.output/f'support_{i:05d}.npz', support=support, visible=observations[i])
     print(f'Retained {after:,}/{before:,} observed depth pixels', flush=True)
     if after < 100:
         raise ValueError('Insufficient cross-view agreement; no credible fused mesh.')
@@ -163,14 +180,21 @@ def run(args):
     final_labels, final_sizes, _ = mesh.cluster_connected_triangles()
     final_sizes = np.asarray(final_sizes)
     report = dict(schema='voxelflight.refusion.v1', input=str(args.input.resolve()),
-        method='Cached multiview predictions + depth support + TSDF surface integration',
+        method=('Cached predictions + TSDF surface integration' if args.min_support == 0
+                else 'Cached multiview predictions + depth support + TSDF surface integration'),
         source_input=source_report.get('input'),source_window_size=source_report.get('window_size'),
         source_model=source_report['model'], source_inference_device=source_report['device'],
         inference_runtime_s=source_report['runtime_s'], refusion_runtime_s=time.monotonic()-started,
-        source_views=len(views), voxel_length_m=args.voxel, min_other_view_support=args.min_support,
+        source_views=len(views), selected_view_stride=args.view_stride,
+        support_neighbor_radius=args.neighbor_radius,
+        support_validation_skipped=args.min_support == 0,
+        voxel_length_m=args.voxel, min_other_view_support=args.min_support,
         relative_tolerance=args.relative_tolerance, absolute_tolerance_m=args.absolute_tolerance,
-        max_depth_m=args.max_depth, input_depth_pixels=before, supported_depth_pixels=after,
-        supported_fraction=after/before, median_relative_crossview_residual_per_view=errors,
+        max_depth_m=args.max_depth, input_depth_pixels=before,
+        supported_depth_pixels=after if args.min_support else None,
+        supported_fraction=after/before if args.min_support else None,
+        retained_depth_pixels=after, retained_fraction=after/before,
+        median_relative_crossview_residual_per_view=errors,
         raw_triangles=faces_before_cleanup, triangles=len(mesh.triangles), vertices=len(mesh.vertices),
         connected_components=len(final_sizes),
         largest_component_triangle_fraction=float(final_sizes.max()/len(mesh.triangles)),
@@ -199,4 +223,8 @@ if __name__ == '__main__':
     p.add_argument('--absolute-tolerance', type=float, default=.08)
     p.add_argument('--max-depth', type=float, default=80.)
     p.add_argument('--min-component-triangles', type=int, default=100)
+    p.add_argument('--view-stride', type=int, default=1,
+                   help='Use every Nth cached prediction, preserving time order.')
+    p.add_argument('--neighbor-radius', type=int, default=None,
+                   help='Check depth agreement only against this many adjacent selected views on each side; default checks all views.')
     run(p.parse_args())

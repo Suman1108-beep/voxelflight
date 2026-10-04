@@ -114,6 +114,8 @@ def gpu_tsdf_tiled(views, tile=60.0, margin=1.0, clean_min_triangles=300, log=pr
                         tv.append({**v, "depth": np.where(inside, v["depth"], 0).astype(np.float32)})
                 if not tv:
                     continue
+                # Open3D sizes its per-grid block scratch table from the first view: integrate the fullest view first
+                tv.sort(key=lambda v: -int(np.count_nonzero(v["depth"])))
                 mesh, pcd = gpu_tsdf(tv, log=lambda *_: None, **kw)
                 futures.append(pool.submit(finish, mesh, pcd, a, b, f"{ix},{iy} ({len(tv)} views)"))
         mesh_all, pcd_all = o3d.geometry.TriangleMesh(), o3d.geometry.PointCloud()

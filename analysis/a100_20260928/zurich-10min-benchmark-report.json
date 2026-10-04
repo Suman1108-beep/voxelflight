@@ -1,0 +1,31 @@
+{
+  "schema": "voxelflight.ten-minute-benchmark.v1",
+  "input": "/workspace/voxelflight_a100_20260928/runs/zurich-10min-input/flight.mp4",
+  "input_provenance": "Derived CFR H.264 from original sequential JPEGs, not an original camera MP4",
+  "input_duration_s": 601.587154,
+  "input_source_frames": 18000,
+  "selected_keyframes": 360,
+  "device": "cuda",
+  "peak_gpu_allocation_gib": 9.89643907546997,
+  "stage_seconds": {
+    "inference": 386.2957009759848,
+    "fusion": 268.0241057620151,
+    "georeferenced": 12.330763928010128
+  },
+  "reused_existing_stages": {
+    "inference": false,
+    "fusion": false,
+    "georeferenced": false
+  },
+  "continuous_timed_run": true,
+  "processing_wall_seconds": 666.6542383479828,
+  "within_15_minute_processing_target": true,
+  "model": "facebook/map-anything-apache",
+  "fused_triangles": 14061861,
+  "fused_components": 3065,
+  "fused_largest_component_fraction": 0.5221313167581446,
+  "georeferenced_output": "/workspace/voxelflight_a100_20260928/runs/zurich-10min-360w48o8-v1/georeferenced",
+  "ground_truth_used": false,
+  "independent_surface_accuracy_verified": false,
+  "note": "Video preparation from official JPEGs is excluded; official moving-video input would already be an MP4/MOV."
+}

@@ -1,0 +1,9 @@
+{
+  "frames": 18000,
+  "frames_with_gps": 18000,
+  "first_timestamp_us": 1343378886,
+  "last_timestamp_us": 1944966040,
+  "duration_s": 601.587154,
+  "video_created": true,
+  "video_provenance": "Derived CFR H.264 from original sequential JPEGs, not an original camera MP4"
+}

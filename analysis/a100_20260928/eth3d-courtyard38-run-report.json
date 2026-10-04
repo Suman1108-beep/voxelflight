@@ -1,0 +1,596 @@
+{
+  "schema": "sih3d.gpu-run.v2",
+  "input": {
+    "name": "dslr_images_undistorted",
+    "duration_s": null,
+    "source_frames": 38,
+    "input_type": "image_sequence"
+  },
+  "device": "cuda",
+  "model": "facebook/map-anything-apache",
+  "model_revision": "00f9c245bbcb60522d1ed7f9e9d88462c6e3f38a",
+  "model_code_revision": "3d10cf7a3016fc0f9bb13a071ee66c47b10be0d9",
+  "torch_version": "2.6.0a0+df5bbc09d1.nv24.12",
+  "inference_resolution": 518,
+  "window_size": 48,
+  "overlap": 8,
+  "keyframes": 38,
+  "windows": 1,
+  "points": 1860801,
+  "vertices": 1343721,
+  "triangles": 2538770,
+  "runtime_s": 73.0692036569817,
+  "load_and_input_s": 35.73380101699149,
+  "peak_gpu_allocation_gib": 9.635130405426025,
+  "ground_truth_used": false,
+  "training_performed": false,
+  "coordinate_system": "Local Z-up / learned metric scale; north unknown",
+  "georeferenced": false,
+  "utm_origin": null,
+  "gps_fit_residual": null,
+  "trajectory_rmse_m": null,
+  "surface_rmse_m": null,
+  "sih_requirements_verified": false,
+  "alignment": [],
+  "warnings": [
+    "No independent surface or trajectory accuracy measured in this inference run.",
+    "Sparse keyframe sampling may miss visible surfaces. Unobserved surfaces are left empty.",
+    "No semantic segmentation, inertial fusion, bundle adjustment or Gaussian-splat training in this mode.",
+    "Camera intrinsics were estimated by the model; no measured calibration was supplied."
+  ],
+  "artifacts": [
+    "reconstruction_mesh.glb",
+    "pointcloud.ply",
+    "reconstruction.obj",
+    "camera_poses.npz",
+    "trajectory.csv",
+    "report.json"
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0286.JPG"
+    },
+    {
+      "index": 1,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0287.JPG"
+    },
+    {
+      "index": 2,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0288.JPG"
+    },
+    {
+      "index": 3,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0289.JPG"
+    },
+    {
+      "index": 4,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0290.JPG"
+    },
+    {
+      "index": 5,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0291.JPG"
+    },
+    {
+      "index": 6,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0292.JPG"
+    },
+    {
+      "index": 7,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0293.JPG"
+    },
+    {
+      "index": 8,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0294.JPG"
+    },
+    {
+      "index": 9,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0295.JPG"
+    },
+    {
+      "index": 10,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0296.JPG"
+    },
+    {
+      "index": 11,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0297.JPG"
+    },
+    {
+      "index": 12,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0298.JPG"
+    },
+    {
+      "index": 13,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0299.JPG"
+    },
+    {
+      "index": 14,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0300.JPG"
+    },
+    {
+      "index": 15,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0301.JPG"
+    },
+    {
+      "index": 16,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0302.JPG"
+    },
+    {
+      "index": 17,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0303.JPG"
+    },
+    {
+      "index": 18,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0304.JPG"
+    },
+    {
+      "index": 19,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0305.JPG"
+    },
+    {
+      "index": 20,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0306.JPG"
+    },
+    {
+      "index": 21,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0307.JPG"
+    },
+    {
+      "index": 22,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0308.JPG"
+    },
+    {
+      "index": 23,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0309.JPG"
+    },
+    {
+      "index": 24,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0310.JPG"
+    },
+    {
+      "index": 25,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0311.JPG"
+    },
+    {
+      "index": 26,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0312.JPG"
+    },
+    {
+      "index": 27,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0313.JPG"
+    },
+    {
+      "index": 28,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0314.JPG"
+    },
+    {
+      "index": 29,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0315.JPG"
+    },
+    {
+      "index": 30,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0316.JPG"
+    },
+    {
+      "index": 31,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0317.JPG"
+    },
+    {
+      "index": 32,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0318.JPG"
+    },
+    {
+      "index": 33,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0319.JPG"
+    },
+    {
+      "index": 34,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0320.JPG"
+    },
+    {
+      "index": 35,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0321.JPG"
+    },
+    {
+      "index": 36,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0322.JPG"
+    },
+    {
+      "index": 37,
+      "source_frame": null,
+      "timestamp_s": null,
+      "source_name": "DSC_0323.JPG"
+    }
+  ],
+  "trajectory": [
+    {
+      "frame": 0,
+      "position": [
+        0.0001596467336639762,
+        0.0006543037015944719,
+        0.0003092411789111793
+      ]
+    },
+    {
+      "frame": 1,
+      "position": [
+        0.4824901819229126,
+        -0.051189031451940536,
+        0.02859005331993103
+      ]
+    },
+    {
+      "frame": 2,
+      "position": [
+        0.8955386877059937,
+        -0.04455012455582619,
+        0.02715495601296425
+      ]
+    },
+    {
+      "frame": 3,
+      "position": [
+        1.2973953485488892,
+        -0.06492628902196884,
+        0.03489561751484871
+      ]
+    },
+    {
+      "frame": 4,
+      "position": [
+        1.7610286474227905,
+        -0.01727370359003544,
+        0.04047888144850731
+      ]
+    },
+    {
+      "frame": 5,
+      "position": [
+        2.1332247257232666,
+        -0.005962062161415815,
+        0.027424775063991547
+      ]
+    },
+    {
+      "frame": 6,
+      "position": [
+        2.50020170211792,
+        0.03752102330327034,
+        0.022144056856632233
+      ]
+    },
+    {
+      "frame": 7,
+      "position": [
+        3.0944459438323975,
+        -0.01844274252653122,
+        0.04280702397227287
+      ]
+    },
+    {
+      "frame": 8,
+      "position": [
+        3.474127769470215,
+        -0.04762231558561325,
+        0.04554985836148262
+      ]
+    },
+    {
+      "frame": 9,
+      "position": [
+        3.8967998027801514,
+        -0.12913298606872559,
+        0.05394335091114044
+      ]
+    },
+    {
+      "frame": 10,
+      "position": [
+        4.44150972366333,
+        -0.2164212465286255,
+        0.002670120680704713
+      ]
+    },
+    {
+      "frame": 11,
+      "position": [
+        4.575860977172852,
+        -0.5201451778411865,
+        -0.033626146614551544
+      ]
+    },
+    {
+      "frame": 12,
+      "position": [
+        4.703699588775635,
+        -0.48614656925201416,
+        -0.13956356048583984
+      ]
+    },
+    {
+      "frame": 13,
+      "position": [
+        4.075003623962402,
+        -0.2493869513273239,
+        -0.12016192078590393
+      ]
+    },
+    {
+      "frame": 14,
+      "position": [
+        3.8987791538238525,
+        -0.43041008710861206,
+        -0.12311384826898575
+      ]
+    },
+    {
+      "frame": 15,
+      "position": [
+        3.6234045028686523,
+        -1.0168490409851074,
+        -0.30536752939224243
+      ]
+    },
+    {
+      "frame": 16,
+      "position": [
+        3.7797586917877197,
+        -0.1768161654472351,
+        -0.1583729237318039
+      ]
+    },
+    {
+      "frame": 17,
+      "position": [
+        3.369601249694824,
+        -0.5024996995925903,
+        -0.18051446974277496
+      ]
+    },
+    {
+      "frame": 18,
+      "position": [
+        2.7143070697784424,
+        -0.7110148072242737,
+        -0.21961277723312378
+      ]
+    },
+    {
+      "frame": 19,
+      "position": [
+        2.2536768913269043,
+        -0.8403595685958862,
+        -0.26707589626312256
+      ]
+    },
+    {
+      "frame": 20,
+      "position": [
+        1.7659263610839844,
+        -0.966219961643219,
+        -0.235110804438591
+      ]
+    },
+    {
+      "frame": 21,
+      "position": [
+        1.1700817346572876,
+        -0.6913042664527893,
+        -0.14961601793766022
+      ]
+    },
+    {
+      "frame": 22,
+      "position": [
+        0.7865340113639832,
+        -0.3610287308692932,
+        -0.10154221951961517
+      ]
+    },
+    {
+      "frame": 23,
+      "position": [
+        0.3839123845100403,
+        -0.18930090963840485,
+        -0.13695064187049866
+      ]
+    },
+    {
+      "frame": 24,
+      "position": [
+        -0.15754160284996033,
+        -0.041560351848602295,
+        -0.014519878663122654
+      ]
+    },
+    {
+      "frame": 25,
+      "position": [
+        0.6636597514152527,
+        -5.627640724182129,
+        -0.9591614603996277
+      ]
+    },
+    {
+      "frame": 26,
+      "position": [
+        1.3073540925979614,
+        -5.169493198394775,
+        -0.7084935307502747
+      ]
+    },
+    {
+      "frame": 27,
+      "position": [
+        2.6470930576324463,
+        -5.007617950439453,
+        -0.6493255496025085
+      ]
+    },
+    {
+      "frame": 28,
+      "position": [
+        3.2708611488342285,
+        -4.666733264923096,
+        -0.7390874624252319
+      ]
+    },
+    {
+      "frame": 29,
+      "position": [
+        2.8086910247802734,
+        -5.1336350440979,
+        -0.8416612148284912
+      ]
+    },
+    {
+      "frame": 30,
+      "position": [
+        2.965022563934326,
+        -6.082103729248047,
+        -1.0434329509735107
+      ]
+    },
+    {
+      "frame": 31,
+      "position": [
+        1.897336721420288,
+        -6.458892345428467,
+        -1.1054625511169434
+      ]
+    },
+    {
+      "frame": 32,
+      "position": [
+        -0.6170067191123962,
+        -4.097853183746338,
+        -0.5347023010253906
+      ]
+    },
+    {
+      "frame": 33,
+      "position": [
+        -1.4558213949203491,
+        -1.9558099508285522,
+        -0.19614729285240173
+      ]
+    },
+    {
+      "frame": 34,
+      "position": [
+        -1.4653013944625854,
+        -2.800230026245117,
+        -0.6380063891410828
+      ]
+    },
+    {
+      "frame": 35,
+      "position": [
+        -1.5123382806777954,
+        -4.309426307678223,
+        -0.8513044714927673
+      ]
+    },
+    {
+      "frame": 36,
+      "position": [
+        -1.4302825927734375,
+        -5.796908855438232,
+        -1.0752015113830566
+      ]
+    },
+    {
+      "frame": 37,
+      "position": [
+        -1.6441153287887573,
+        -7.058175086975098,
+        -1.0717869997024536
+      ]
+    }
+  ],
+  "checksums": {
+    "reconstruction_mesh.glb": "b9baacb6f31cead61952cd4cedab7f18682c17a7f9d8ce3c0b1cc62ee1f6d375",
+    "pointcloud.ply": "96c66138e2c98d5da6ee6c4a4195019844eb4dc518a84d2a0a917eff3b220b87",
+    "reconstruction.obj": "ba1f3195585f735a88e9459fcb753880f27089fbef26451d619afc1a435a20ed",
+    "camera_poses.npz": "86e093c9db446e3708a0f4a7764e613edb400d0251bd1484a18131485583953c",
+    "trajectory.csv": "7d2a37721c1267d4d89a6fc1baf2d61c0505f8afad3a41ae18c99bfbde6b5307"
+  },
+  "calibration_used": false,
+  "visual_pose_priors": null,
+  "prediction_cache_saved": true,
+  "appearance": "Embedded atlas sampled from actual input pixels; no generated textures or GANs"
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "voxelflight.host-audit.v1",
+  "python": "/usr/bin/python3",
+  "python_version": "3.12.3",
+  "cpu_count": 256,
+  "cpu_affinity": 256,
+  "gpu": {
+    "exit_code": 0,
+    "stdout": "index, name, memory.total [MiB], memory.used [MiB], memory.free [MiB], utilization.gpu [%], driver_version\n0, NVIDIA A100-SXM4-40GB, 40960 MiB, 0 MiB, 40339 MiB, 0 %, 535.161.08\n",
+    "stderr": ""
+  },
+  "gpu_processes": {
+    "exit_code": 0,
+    "stdout": "pid, process_name, used_gpu_memory [MiB]\n",
+    "stderr": ""
+  },
+  "disk": {
+    "exit_code": 0,
+    "stdout": "Filesystem                                                             Size  Used Avail Use% Mounted on\n11.11.11.9@tcp,11.11.11.10@tcp:11.11.11.11@tcp,11.11.11.12@tcp:/flash   56T   51T  3.9T  93% /workspace\n",
+    "stderr": ""
+  },
+  "executables": {
+    "python3": "/usr/bin/python3",
+    "git": "/usr/bin/git",
+    "ffmpeg": null,
+    "colmap": null,
+    "nvcc": "/usr/local/cuda/bin/nvcc"
+  },
+  "reconstruction_project_entries": [
+    "voxelflight_a100_20260928"
+  ],
+  "cgroup_limits": {
+    "cpu.max": "max 100000",
+    "memory.max": "max",
+    "memory.current": "75042566144",
+    "cpuset.cpus.effective": "0-255"
+  },
+  "packages": {
+    "torch": "2.5.1+cu121",
+    "torchvision": "0.20.1+cu121",
+    "numpy": "1.26.4",
+    "scipy": "1.14.1",
+    "open3d": null,
+    "pycolmap": null,
+    "mapanything": null,
+    "gsplat": null,
+    "transformers": "4.51.3",
+    "huggingface_hub": "0.36.2",
+    "opencv-python": null
+  },
+  "memory": [
+    "MemTotal:       1056604228 kB",
+    "MemAvailable:   924365488 kB"
+  ],
+  "torch_cuda_build": "12.1",
+  "cuda_available": true,
+  "cuda_smoke": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "correct": true,
+    "allocated_bytes": 10616832
+  }
+}

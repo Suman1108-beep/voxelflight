@@ -1,0 +1,61 @@
+{
+  "schema": "voxelflight.georeferenced-refusion.v1",
+  "source": "/workspace/voxelflight_a100_20260928/runs/zurich-disjoint-video60-mapanything90-w48-o8-v2",
+  "fusion": "/workspace/voxelflight_a100_20260928/runs/zurich-disjoint-video60-90w48-tsdf005-no-filter",
+  "method": "Exact frozen onboard-GPS camera transform applied to fused mesh",
+  "scale": 0.9458479285240173,
+  "rotation": [
+    [
+      0.8178573846817017,
+      -0.15287542343139648,
+      0.5547417402267456
+    ],
+    [
+      0.5552726984024048,
+      0.4625541865825653,
+      -0.691169798374176
+    ],
+    [
+      -0.15093523263931274,
+      0.8733112812042236,
+      0.4631909430027008
+    ]
+  ],
+  "translation": [
+    -9.756407737731934,
+    -10.481507301330566,
+    0.6058026552200317
+  ],
+  "pose_transform_max_residual_m": 3.025192654604325e-06,
+  "coordinate_system": "EPSG:32632 local offset",
+  "utm_origin": [
+    465783.97482652264,
+    5248035.299439998,
+    483.32500000000005
+  ],
+  "horizontal_epsg": 32632,
+  "georeferenced": true,
+  "ground_truth_used": false,
+  "independent_surface_accuracy_verified": false,
+  "absolute_position_accuracy_verified": false,
+  "runtime_s": 4.329704996984219,
+  "artifacts": [
+    "reconstruction_mesh.glb",
+    "pointcloud.ply",
+    "reconstruction_utm.las",
+    "surface_model.tif"
+  ],
+  "source_report_sha256": "f29f6480ff111c47aabad655d5648313d920bb19434f6cc980d3184d7e94f18b",
+  "fusion_report_sha256": "48a89e1a36392e2a87e0686a98505fac5995f5c90892c52727aed5bc92f94c72",
+  "artifact_sha256": {
+    "reconstruction_mesh.glb": "7aae3b97b4a1bebd2fc94131ab169a0e040f7d073c461e4ca9a4c3dd5b0f20e0",
+    "pointcloud.ply": "296992014c3e68f40b6eced14e384b6f191d434bea715e238253e0b46785451a",
+    "reconstruction_utm.las": "9b101380845aeb36fca80a9d48c7e4cf62ae39ac998b7797873f5dcc8e701673",
+    "surface_model.tif": "0b13c8f4cef54d5807f1ee08a9a16b5edf90eb1e6bb79c464962875cdd817f8d"
+  },
+  "limitations": [
+    "This transfers the original noisy-GPS transform; it cannot improve absolute accuracy.",
+    "Fused surfaces remain partial and may contain detached fragments.",
+    "A coordinate label and GPS fit are not independent surface validation."
+  ]
+}

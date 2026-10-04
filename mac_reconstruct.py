@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Real pretrained MapAnything inference on Apple MPS, isolated from the CUDA benchmark.
+"""Real pretrained MapAnything inference on Apple MPS or NVIDIA CUDA.
 
 Bounded windows trade global consistency and resolution for 16 GB compatibility.
 All run metrics are newly measured; accuracy is explicitly unmeasured without a reference.
@@ -82,6 +82,28 @@ def progress(out,stage,fraction,detail):
     print(f"[{fraction:.0%}] {stage}: {detail}",flush=True)
 
 
+def decode_selected_video_frames(cap,indices):
+    """Decode a long video once, retrieving RGB only at selected frame indices.
+
+    Repeated random H.264 seeks can re-decode the same GOP hundreds of times
+    over a ten-minute flight. `grab` advances the decoder without transferring
+    every unselected frame into a Python image array.
+    """
+    cursor=0
+    for number in indices:
+        number=int(number)
+        if number<cursor:
+            raise ValueError("Video sample indices must be strictly increasing.")
+        while cursor<=number:
+            if not cap.grab():
+                raise ValueError(f"Video decoding ended before source frame {number}.")
+            cursor+=1
+        ok,img=cap.retrieve()
+        if not ok:
+            raise ValueError(f"Video frame {number} could not be retrieved.")
+        yield number,img
+
+
 def extract(args,out):
     import cv2
     import numpy as np
@@ -98,10 +120,7 @@ def extract(args,out):
         indices=np.unique(np.linspace(0,video.frame_count-1,min(args.max_frames,video.frame_count)).round().astype(int))
         cap=cv2.VideoCapture(str(args.video))
         try:
-            for i,number in enumerate(indices):
-                cap.set(cv2.CAP_PROP_POS_FRAMES,int(number));ok,img=cap.read()
-                if not ok:
-                    raise ValueError(f"Video decoding failed at source frame {number}; try an H.264 MP4.")
+            for i,(number,img) in enumerate(decode_selected_video_frames(cap,indices)):
                 if camera and camera[3].size:img=cv2.undistort(img,camera[2],camera[3])
                 scale=min(1,1280/max(img.shape[:2]));img=cv2.resize(img,None,fx=scale,fy=scale) if scale<1 else img
                 path=folder/f"frame_{i:05d}.jpg";cv2.imwrite(str(path),img,[cv2.IMWRITE_JPEG_QUALITY,94])
@@ -209,11 +228,13 @@ def run(args):
         raise ValueError("Output folder must be empty; existing results will never be overwritten.")
     out.mkdir(parents=True,exist_ok=True)
     args._owns_output=True
-    begin=time.monotonic();warnings=["Experimental Mac inference: no independent surface or trajectory accuracy measured.","Sparse keyframe sampling may miss visible surfaces. Unobserved surfaces are left empty.","No semantic segmentation, inertial fusion, bundle adjustment or Gaussian-splat training in this Mac mode."]
+    begin=time.monotonic();warnings=["No independent surface or trajectory accuracy measured in this inference run.","Sparse keyframe sampling may miss visible surfaces. Unobserved surfaces are left empty.","No semantic segmentation, inertial fusion, bundle adjustment or Gaussian-splat training in this mode."]
     torch.set_num_threads(4)
-    if not torch.backends.mps.is_available():
-        raise RuntimeError("Apple MPS GPU is unavailable in this Python environment.")
-    torch.mps.set_per_process_memory_fraction(.8)
+    device="cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else None
+    if device is None:
+        raise RuntimeError("A CUDA or Apple MPS GPU is required for this reconstruction mode.")
+    if device=="mps":torch.mps.set_per_process_memory_fraction(.8)
+    else:torch.cuda.reset_peak_memory_stats()
     progress(out,"Preparing inputs",.02,"Decoding actual input views")
     frames,video,info=extract(args,out)
     prior_path=getattr(args,"visual_pose_priors",None)
@@ -224,7 +245,7 @@ def run(args):
         pose_prior_info=load_visual_pose_priors(prior_path,frames)
         warnings=[warning.replace("No semantic segmentation, inertial fusion, bundle adjustment", "No semantic segmentation or inertial fusion") for warning in warnings]
         warnings.append("Camera priors come from separate visual bundle adjustment, not ground truth. SfM input scale is arbitrary; output metric scale remains model-estimated and unverified.")
-    progress(out,"Loading model",.06,"Loading cached pretrained MapAnything weights onto Apple GPU")
+    progress(out,"Loading model",.06,f"Loading cached pretrained MapAnything weights onto {device}")
     from huggingface_hub import snapshot_download
     from mapanything.models import MapAnything
     from mapanything.utils.image import load_images,preprocess_inputs
@@ -233,16 +254,18 @@ def run(args):
     # does not control torch.hub's GitHub calls.
     from unittest.mock import patch
     hub_load=torch.hub.load
-    encoder_path=ROOT/"cache-mac/torch/hub/facebookresearch_dinov2_main"
+    encoder_path=Path(os.environ.get("DINO_SOURCE",str(ROOT/"cache-mac/torch/hub/facebookresearch_dinov2_main")))
     if not (encoder_path/"hubconf.py").is_file():raise RuntimeError("DINOv2 source cache missing. Run setup_mac.py while online first.")
     def local_encoder(repo,entry,*positional,**kwargs):
         if repo!="facebookresearch/dinov2":raise RuntimeError("Unexpected model code dependency; refusing an online fetch.")
         kwargs.pop("force_reload",None);kwargs.pop("source",None)
         return hub_load(str(encoder_path),entry,*positional,source="local",**kwargs)
     with patch("torch.hub.load",local_encoder):
-        model=MapAnything.from_pretrained(model_path,local_files_only=True).to("mps").eval()
-    torch.mps.empty_cache();load_seconds=time.monotonic()-begin
-    kept={};joins=[];window_size=args.window;step=window_size-2
+        model=MapAnything.from_pretrained(model_path,local_files_only=True).to(device).eval()
+    if device=="mps":torch.mps.empty_cache()
+    else:torch.cuda.empty_cache()
+    load_seconds=time.monotonic()-begin
+    kept={};joins=[];window_size=args.window;step=window_size-args.overlap
     visual_anchors=None;anchor_scale=None
     if pose_prior_info:
         # One shared SfM frame for all windows; no independent point-cloud joins.
@@ -264,7 +287,7 @@ def run(args):
             views=preprocess_inputs(inputs,resize_mode="longest_side",size=args.size,verbose=False)
         else:views=load_images([frames[i]["path"] for i in ids],resize_mode="longest_side",size=args.size,verbose=False)
         with torch.inference_mode():
-            predictions=model.infer(views,memory_efficient_inference=True,minibatch_size=1,use_amp=True,amp_dtype="fp16",apply_mask=True,mask_edges=True,apply_confidence_mask=True,confidence_percentile=20)
+            predictions=model.infer(views,memory_efficient_inference=True,minibatch_size=1,use_amp=True,amp_dtype="bf16" if device=="cuda" else "fp16",apply_mask=True,mask_edges=True,apply_confidence_mask=True,confidence_percentile=20)
         local={}
         for i,pred in zip(ids,predictions):
             cpu=lambda key:pred[key][0].detach().float().cpu().numpy()
@@ -305,9 +328,13 @@ def run(args):
             pred["depth"]*=s
             kept[i]=pred
         del local
-        gc.collect();torch.mps.empty_cache()
-    peak_gpu=float(torch.mps.driver_allocated_memory()/1024**3)
-    del model;gc.collect();torch.mps.empty_cache()
+        gc.collect()
+        if device=="mps":torch.mps.empty_cache()
+        else:torch.cuda.empty_cache()
+    peak_gpu=float((torch.cuda.max_memory_allocated() if device=="cuda" else torch.mps.driver_allocated_memory())/1024**3)
+    del model;gc.collect()
+    if device=="mps":torch.mps.empty_cache()
+    else:torch.cuda.empty_cache()
     progress(out,"Fusing geometry",.79,"Combining observed surfaces and retaining camera poses")
     poses=np.stack([kept[i]["pose"] for i in range(len(frames))])
     geo=georeference(args,video,frames,poses,warnings)
@@ -358,7 +385,7 @@ def run(args):
     if geo:artifacts.extend(export_gis(out,points,point_colors,geo))
     progress(out,"Packaging results",.96,"Writing new-run provenance and honest validation status")
     duration=time.monotonic()-begin
-    report=dict(schema="sih3d.mac-run.v1",input=info,device="Apple MPS",model=MODEL_ID,model_revision=MODEL_REVISION,model_code_revision="3d10cf7a3016fc0f9bb13a071ee66c47b10be0d9",torch_version=torch.__version__,inference_resolution=args.size,window_size=window_size,overlap=2,keyframes=len(frames),windows=len(starts),points=len(points),vertices=len(mesh.vertices),triangles=len(mesh.faces),runtime_s=duration,load_and_input_s=load_seconds,gpu_allocation_at_end_gib=peak_gpu,ground_truth_used=False,training_performed=False,coordinate_system=f"EPSG:{geo['epsg']} local offset" if geo else "Local Z-up / learned metric scale; north unknown",georeferenced=bool(geo),utm_origin=geo["origin"].tolist() if geo else None,gps_fit_residual=geo["gps_fit"] if geo else None,trajectory_rmse_m=None,surface_rmse_m=None,sih_requirements_verified=False,alignment=joins,warnings=warnings,artifacts=artifacts+["report.json"],frames=[{k:v for k,v in frame.items() if k!="path"} for frame in frames],trajectory=[dict(frame=i,position=pose[:3,3].tolist()) for i,pose in enumerate(poses)])
+    report=dict(schema="sih3d.gpu-run.v2",input=info,device=device,model=MODEL_ID,model_revision=MODEL_REVISION,model_code_revision="3d10cf7a3016fc0f9bb13a071ee66c47b10be0d9",torch_version=torch.__version__,inference_resolution=args.size,window_size=window_size,overlap=args.overlap,keyframes=len(frames),windows=len(starts),points=len(points),vertices=len(mesh.vertices),triangles=len(mesh.faces),runtime_s=duration,load_and_input_s=load_seconds,peak_gpu_allocation_gib=peak_gpu,ground_truth_used=False,training_performed=False,coordinate_system=f"EPSG:{geo['epsg']} local offset" if geo else "Local Z-up / learned metric scale; north unknown",georeferenced=bool(geo),utm_origin=geo["origin"].tolist() if geo else None,gps_fit_residual=geo["gps_fit"] if geo else None,trajectory_rmse_m=None,surface_rmse_m=None,sih_requirements_verified=False,alignment=joins,warnings=warnings,artifacts=artifacts+["report.json"],frames=[{k:v for k,v in frame.items() if k!="path"} for frame in frames],trajectory=[dict(frame=i,position=pose[:3,3].tolist()) for i,pose in enumerate(poses)])
     report["checksums"]={name:hashlib.sha256((out/name).read_bytes()).hexdigest() for name in artifacts}
     report["calibration_used"]=bool(args.calibration)
     report["visual_pose_priors"]=pose_prior_info
@@ -374,10 +401,12 @@ if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__)
     source=p.add_mutually_exclusive_group(required=True);source.add_argument("--video",type=Path);source.add_argument("--images",type=Path)
     p.add_argument("--telemetry",type=Path);p.add_argument("--calibration",type=Path);p.add_argument("--output",type=Path,required=True)
-    p.add_argument("--max-frames",type=int,default=24,choices=range(2,97));p.add_argument("--size",type=int,default=350,choices=[224,252,350,420]);p.add_argument("--window",type=int,default=4,choices=[3,4,6,12,24],help="Views inferred jointly; 12/24 are experimental quality modes with higher GPU memory use.")
+    p.add_argument("--max-frames",type=int,default=24,choices=range(2,721));p.add_argument("--size",type=int,default=350,choices=[224,252,350,420,518]);p.add_argument("--window",type=int,default=4,choices=[3,4,6,12,24,32,48],help="Views inferred jointly; larger windows require more GPU memory.")
+    p.add_argument("--overlap",type=int,default=2,help="Shared views between adjacent windows; must be between 2 and window-1.")
     p.add_argument("--save-predictions",action="store_true",help="Keep model depths, poses and masks for auditable offline geometry refusion.")
     p.add_argument("--visual-pose-priors",type=Path,help="Experimental calibrated SfM report: non-metric, non-reference camera priors shared across inference windows.")
     args=p.parse_args()
+    if not 2<=args.overlap<args.window:p.error("--overlap must be at least 2 and smaller than --window")
     try:run(args)
     except Exception as error:
         if getattr(args,"_owns_output",False):progress(args.output,"Failed",0,str(error))

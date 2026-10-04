@@ -1,0 +1,22 @@
+{
+  "protocol": "Frozen DPVO video poses; reference used for post-hoc scoring only",
+  "trajectory_sha256": "4f622cbef74ce2dd78f55aee0419aaadeda1bf8eeba23cfa2528b77946c708df",
+  "reference_sha256": "50e95abc70461567a915a76ba17231ae3088b834dbcb433737135eacb9c9c552",
+  "frames": 1800,
+  "source_image_ids": [
+    40010,
+    58000
+  ],
+  "source_frame_stride": 10,
+  "sim3_aligned_camera_error_m": {
+    "rmse_m": 4.098848459012093,
+    "median_m": 2.701817887426584,
+    "p95_m": 7.954224676787039,
+    "max_m": 11.201201607196612
+  },
+  "sim3_evaluation_scale": 10.87950533301001,
+  "direct_absolute_camera_error_m": null,
+  "surface_rmse_m": null,
+  "sih_spatial_accuracy_verified": false,
+  "warning": "Sim(3) fits withheld camera reference for evaluation; it cannot be used for inference or claimed as surface accuracy."
+}

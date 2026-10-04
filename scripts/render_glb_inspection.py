@@ -27,7 +27,12 @@ def main() -> int:
         transform, geometry_name = scene.graph[node_name]
         geometry = scene.geometry[geometry_name]
         points = trimesh.transform_points(np.asarray(geometry.vertices), transform)
-        vertex_colors = np.asarray(geometry.visual.vertex_colors)[:, :3]
+        visual = (
+            geometry.visual.to_color()
+            if geometry.visual.kind == "texture"
+            else geometry.visual
+        )
+        vertex_colors = np.asarray(visual.vertex_colors)[:, :3]
         vertices.append(points)
         colors.append(vertex_colors)
     points = np.concatenate(vertices)
