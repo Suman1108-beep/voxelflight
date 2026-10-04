@@ -42,7 +42,7 @@ test('the explorer syncs exact camera poses with the video and colours the model
  assert.equal(cams.c2w.length,s.keyframes);assert.equal(cams.c2w[0].length,12);assert.equal(s.frame_times.length,s.keyframes);
  const errors=await readFile(new URL('../assets/latest/errors.bin',import.meta.url));assert.ok(errors.length>1000);
  const js=await read('explore.js');assert.match(js,/slerp/);assert.match(js,/errors\.bin/);assert.match(js,/evaluation-only alignment/);
- assert.match(await read('explore.html'),/Compare with camera frame/);
+ assert.match(await read('explore.html'),/Compare with real frame/);
 });
 test('the studio is the signed-in home: checks inputs locally, submits to the job API, opens local models',async()=>{
  const html=await read('studio.html'),js=await read('studio.js');

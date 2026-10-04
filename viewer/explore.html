@@ -3,71 +3,61 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VoxelFlight · Zurich street corridor, 3D reconstruction</title>
-<meta name="description" content="3D model reconstructed from a single 10-minute drone video with ordinary GPS, with flight playback, camera-frame comparison and accuracy against national survey LiDAR.">
+<title>VoxelFlight · One drone pass → a measured 3D city model</title>
+<meta name="description" content="Fly through a 3D model built from a single 10-minute drone video, compare it with the real camera frames, and see its accuracy against national survey LiDAR.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="explore.css">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
-<body data-page="explore">
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
-  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></symbol>
-  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
-  <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3 17L17 3l4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2"/></symbol>
-  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h3l2-2.5h6L17 7h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
-  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
-  <symbol id="i-compare" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M12 5v14"/></symbol>
-  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/></symbol>
-</svg>
+<body>
 <div id="stage" class="stage">
   <canvas id="scene" aria-label="Interactive 3D model reconstructed from the drone video"></canvas>
   <video id="flight" class="pip" src="assets/latest/flight-preview.mp4" muted playsinline preload="auto" aria-label="Source drone video, 4× time-lapse"></video>
-  <div id="pip-label" class="pip-label">Source video · 4× speed</div>
+  <div id="pip-label" class="pip-label">Real drone camera · 4× speed</div>
 </div>
 
 <header class="topbar">
-  <a class="brand" href="/" aria-label="VoxelFlight home"><img src="favicon.svg" alt="" width="22" height="22"><span>VoxelFlight</span><small>SIH26158 · Drone video to 3D model</small></a>
+  <a class="brand" href="/" aria-label="VoxelFlight home"><img src="favicon.svg" alt="" width="28" height="28"><span>VoxelFlight</span></a>
   <nav class="links">
     <button class="link-button" data-open="evidence">Evidence</button>
-    <button class="link-button" data-open="how">Method</button>
+    <button class="link-button" data-open="how">How it works</button>
     <button id="downloads-button" class="link-button" aria-haspopup="true" aria-expanded="false">Downloads</button>
     <a href="/studio">Studio</a>
-    <a href="/login?return_to=/studio" class="signin" data-account-link>Sign in</a>
+    <a href="/login?return_to=/studio" class="signin">Sign in</a>
   </nav>
   <div id="downloads" class="downloads glass" hidden>
-    <a href="assets/latest/reconstruction_mesh.glb" download>Photo-textured mesh <span>GLB</span></a>
-    <a href="assets/latest/reconstruction_mesh.fbx" download>Coloured mesh <span>FBX</span></a>
-    <a href="assets/latest/pointcloud.ply" download>Point cloud <span>PLY</span></a>
-    <a href="assets/latest/reconstruction_utm.las" download>Point cloud, UTM 32N <span>LAS</span></a>
-    <a href="assets/latest/surface_model.tif" download>Surface model, UTM 32N <span>GeoTIFF</span></a>
-    <button id="export-obj" class="link-button">Current mesh <span>OBJ</span></button>
+    <a href="assets/latest/reconstruction_mesh.glb" download>GLB · photo-textured mesh</a>
+    <a href="assets/latest/reconstruction_mesh.fbx" download>FBX · coloured mesh</a>
+    <a href="assets/latest/pointcloud.ply" download>PLY · point cloud</a>
+    <a href="assets/latest/reconstruction_utm.las" download>LAS · UTM point cloud</a>
+    <a href="assets/latest/surface_model.tif" download>GeoTIFF · surface model</a>
+    <button id="export-obj" class="link-button">OBJ · export current mesh</button>
   </div>
 </header>
 
 <section id="intro" class="intro glass">
-  <p class="kicker">Project · single-pass drone survey</p>
-  <h1>Zurich street corridor</h1>
-  <p class="lede">A 10-minute drone video with ordinary GPS, reconstructed into a georeferenced 3D model on one GPU. Accuracy is measured against the Swiss national airborne laser survey, which the pipeline does not use.</p>
+  <p class="kicker">SIH26158 · Single-pass drone video → accurate 3D model</p>
+  <h1>One drone flight in.<br><span>A measured 3D city out.</span></h1>
+  <p class="lede">This is a real <b>10-minute drone video</b> flown once along city streets in Zurich, Switzerland (public research footage, ordinary GPS). VoxelFlight turned it into the 3D model behind this card on one GPU. Every number below is checked against Switzerland's national airborne laser survey, which the pipeline never sees.</p>
   <div id="metrics" class="metrics"></div>
   <div class="intro-actions">
-    <button id="start" class="primary"><svg class="icon" style="fill:currentColor;stroke:none"><use href="#i-play"/></svg>Play flight</button>
-    <button id="explore-free" class="ghost">Explore model</button>
+    <button id="start" class="primary">▶ Fly the drone's path</button>
+    <button id="explore-free" class="ghost">Explore freely</button>
   </div>
 </section>
 
 <aside id="layers" class="layers glass" aria-label="Layers">
   <p class="panel-title">Layers</p>
-  <label class="chip"><input type="checkbox" data-layer="mesh" checked><span>Textured model</span></label>
-  <label class="chip"><input type="checkbox" data-layer="heat"><span>Error vs survey</span></label>
-  <label class="chip"><input type="checkbox" data-layer="fill" checked><span>Road fill</span><em>interpolated</em></label>
+  <label class="chip"><input type="checkbox" data-layer="mesh" checked><span>Photo-textured model</span></label>
+  <label class="chip"><input type="checkbox" data-layer="heat"><span>Accuracy heatmap</span></label>
+  <label class="chip"><input type="checkbox" data-layer="fill" checked><span>Road gap fill <em>interpolated</em></span></label>
   <label class="chip"><input type="checkbox" data-layer="cloud"><span>Point cloud</span></label>
-  <label class="chip"><input type="checkbox" data-layer="path" checked><span>Flight path</span></label>
+  <label class="chip"><input type="checkbox" data-layer="path" checked><span>Drone path</span></label>
   <div id="legend" class="legend" hidden></div>
   <p class="panel-title tools-title">Tools</p>
-  <button id="measure" class="tool"><svg class="icon"><use href="#i-ruler"/></svg>Measure distance</button>
-  <button id="snapshot" class="tool"><svg class="icon"><use href="#i-camera"/></svg>Save view as image</button>
+  <button id="measure" class="tool">📏 Measure a distance</button>
+  <button id="snapshot" class="tool">📷 Save image</button>
 </aside>
 
 <div id="strip" class="strip" aria-label="Flight timeline: click a frame to jump there"></div>
@@ -75,26 +65,26 @@
 <section id="panel" class="panel glass" hidden aria-label="Evidence and method">
   <div class="panel-head">
     <div class="tabs" role="tablist"><button role="tab" data-tab="evidence">Evidence</button><button role="tab" data-tab="how">How it works</button></div>
-    <button id="panel-close" class="close" aria-label="Close panel"><svg class="icon"><use href="#i-x"/></svg></button>
+    <button id="panel-close" class="close" aria-label="Close panel">✕</button>
   </div>
   <div id="tab-evidence" class="tab">
-    <p class="kicker">Evidence</p>
-    <h2>Speed, accuracy and coverage, measured against independent survey data</h2>
-    <p class="muted">Model shape and coverage are scored against the Swiss national airborne laser survey (swisstopo swissSURFACE3D); camera positions against the dataset's reference trajectory. Neither reference is an input to the pipeline. A single evaluation-only rigid alignment separates model shape from GPS placement error.</p>
+    <p class="kicker">Measured, not claimed</p>
+    <h2>Every number is checked against survey data the pipeline never sees.</h2>
+    <p class="muted">Model shape and coverage are scored against Switzerland's national airborne laser survey (swisstopo swissSURFACE3D), camera positions against the dataset's reference trajectory. One evaluation-only alignment separates the model's shape from GPS placement error.</p>
     <div id="big-numbers" class="big-numbers"></div>
-    <h3>Visible-scene coverage</h3>
+    <h3>How much of the visible scene is measured</h3>
     <p class="muted small">Share of survey points the drone camera could see that have model surface within 1 m. Never-seen surfaces are not invented.</p>
     <div id="coverage-bars" class="bars"></div>
-    <h3>Accuracy by flight</h3>
+    <h3>Accuracy on every flight we tested</h3>
     <div class="table-wrap"><table><thead><tr><th>Flight</th><th>Shape vs survey (median)</th><th>Absolute placement</th></tr></thead><tbody>
-      <tr><td>Zurich 10 min, maximum coverage <em>· shown</em></td><td>0.73 m</td><td>2.7 m · ordinary GPS</td></tr>
+      <tr><td>Zurich 10 min, maximum coverage <em>(shown model)</em></td><td>0.73 m</td><td>2.7 m · ordinary GPS</td></tr>
       <tr><td>Zurich 10 min, high-quality (14 min 28 s)</td><td>0.59 m</td><td>2.7 m · ordinary GPS</td></tr>
       <tr><td>Zurich 10 min, fast mode (7 min 8 s)</td><td>0.91 m</td><td>3.5 m · ordinary GPS</td></tr>
       <tr><td>Zurich 60 s held-out flight</td><td>0.55 m</td><td>5.0 m · ordinary GPS</td></tr>
       <tr><td>Toledo (USA) aerial, 120 m</td><td>0.85 m</td><td>3.1 m · ordinary GPS</td></tr>
       <tr><td>Austria aerial, RTK GPS</td><td>—</td><td><b>0.5 m horizontal · 0.41 m vertical</b></td></tr>
     </tbody></table></div>
-    <h3>SIH26158 requirement status</h3>
+    <h3>SIH26158 requirements</h3>
     <div class="table-wrap"><table class="req"><thead><tr><th>Requirement</th><th>Target</th><th>Measured</th><th>Status</th></tr></thead><tbody>
       <tr><td>Processing speed</td><td>&lt;15 min for a 10-min video</td><td>7 min 8 s fast · 14 min 28 s high quality, one A100</td><td><span class="badge ok">Met</span></td></tr>
       <tr><td>Spatial accuracy</td><td>≤1 m</td><td>Shape 0.59–0.91 m median; 0.5 m / 0.41 m absolute with RTK; ≈2.7 m with ordinary GPS</td><td><span class="badge ok">Met with RTK</span></td></tr>
@@ -102,15 +92,15 @@
       <tr><td>3D output</td><td>Textured mesh or point cloud</td><td>Photo-textured mesh, 52 M-triangle mesh, point cloud</td><td><span class="badge ok">Met</span></td></tr>
       <tr><td>Formats</td><td>OBJ, PLY, LAS, GeoTIFF, GLB, FBX</td><td>All six from every run, reopened by independent readers</td><td><span class="badge ok">Met</span></td></tr>
       <tr><td>Input</td><td>1080p/4K video + GPS + metadata</td><td>1080p and real DJI 4K (H.264 + .SRT, HEVC + flight log); intrinsics estimated if missing</td><td><span class="badge ok">Met</span></td></tr>
-      <tr><td>Viewer</td><td>Web or desktop</td><td>This viewer: flight playback, camera-frame overlay, error map, measurement, downloads</td><td><span class="badge ok">Met</span></td></tr>
+      <tr><td>Viewer</td><td>Web or desktop</td><td>This page: fly-through, real-frame overlay, heatmap, measure, downloads</td><td><span class="badge ok">Met</span></td></tr>
     </tbody></table></div>
     <p class="muted small">Full protocol and every run: <a href="https://github.com/Suman1108-beep/voxelflight/blob/main/vf2/RESULTS.md" target="_blank" rel="noreferrer">vf2/RESULTS.md</a> · <a href="assets/latest/evaluation.json" download>evaluation.json</a></p>
   </div>
   <div id="tab-how" class="tab" hidden>
-    <p class="kicker">Method</p>
-    <h2>Processing pipeline: video and GPS log to six georeferenced formats</h2>
+    <p class="kicker">From video to measured 3D</p>
+    <h2>One GPU pipeline, video on disk to six file formats.</h2>
     <div id="steps" class="steps"></div>
-    <h3>Processing modes</h3>
+    <h3>Three modes, same pipeline</h3>
     <div class="modes">
       <div><b>Fast</b><span>7 min 8 s</span><small>visual odometry + metric depth, GPS fusion</small></div>
       <div><b>High quality</b><span>14 min 28 s</span><small>photogrammetric cameras + Depth Anything 3</small></div>
@@ -124,21 +114,21 @@
 <div id="toast" class="toast glass" role="status" hidden></div>
 
 <footer class="dock glass">
-  <button id="play" class="round" aria-label="Play flight"><svg class="icon"><use href="#i-play"/></svg></button>
+  <button id="play" class="round" aria-label="Play flight">▶</button>
   <div class="scrub">
     <input id="timeline" type="range" min="0" max="1000" value="0" step="1" aria-label="Position along the flight">
-    <div class="scrub-labels"><span id="clock">0:00</span><span id="where">Drag to move along the flight</span><span id="total">10:00</span></div>
+    <div class="scrub-labels"><span id="clock">0:00</span><span id="where">Drag to move the drone along its path</span><span id="total">10:00</span></div>
   </div>
   <div class="views" role="group" aria-label="Camera">
-    <button data-view="chase" class="active">Follow</button>
-    <button data-view="drone">Camera</button>
-    <button data-view="orbit">Free</button>
+    <button data-view="chase" class="active">Chase</button>
+    <button data-view="drone">Drone's eye</button>
+    <button data-view="orbit">Orbit</button>
   </div>
-  <button id="compare" class="compare"><svg class="icon"><use href="#i-compare"/></svg><span>Compare with camera frame</span></button>
-  <label id="blend-wrap" class="blend" hidden>Photo<input id="blend" type="range" min="0" max="100" value="50">Model</label>
+  <button id="compare" class="compare">Compare with real frame</button>
+  <label id="blend-wrap" class="blend" hidden>Real ↔ 3D<input id="blend" type="range" min="0" max="100" value="50"></label>
 </footer>
 
-<div id="loading" class="loading"><div class="spinner"></div><p id="loading-text">Loading 3D model</p></div>
+<div id="loading" class="loading"><div class="spinner"></div><p id="loading-text">Loading the 3D model (20 MB)…</p></div>
 <script type="module" src="explore.js"></script>
 </body>
 </html>
