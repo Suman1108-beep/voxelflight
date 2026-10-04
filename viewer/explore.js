@@ -10,7 +10,7 @@ const clock=s=>{s=Math.max(0,Math.round(s));return `${Math.floor(s/60)}:${String
 const pct=x=>`${Math.round(x*100)}%`,metres=x=>`${x.toFixed(2)} m`,minsec=s=>`${Math.floor(s/60)} min ${Math.round(s%60)} s`;
 const BINS=[[3,'#2fd38a','≤ 0.3 m'],[5,'#9be15d','0.3–0.5 m'],[10,'#f4d35e','0.5–1 m'],[20,'#f59e42','1–2 m'],[254,'#e9533e','> 2 m'],[255,'#55626d','no survey point']];
 
-let viewer,scene,evaluation,poses=[],times=[],pathLength=[],duration=150,vfov=55,mode='chase',playing=false,errors=null,lastT=-1;
+let viewer,scene,evaluation,poses=[],times=[],pathLength=[],duration=150,vfov=55,mode='chase',playing=false,errors=null,lastT=-1,curT=0;
 
 function pose(m){   // camera-to-world, row-major 3x4, OpenCV axes -> three.js camera (looks down -z, y up)
   const x=new THREE.Vector3(m[0],m[4],m[8]),y=new THREE.Vector3(m[1],m[5],m[9]),z=new THREE.Vector3(m[2],m[6],m[10]);
@@ -31,25 +31,27 @@ function apply(t,force=false){
   if(!poses.length||(!force&&Math.abs(t-lastT)<1e-3))return;lastT=t;
   const {i,p,q}=at(t),cam=viewer.camera;
   viewer.marker?.position.copy(p);
-  if(mode==='drone'){cam.position.copy(p);cam.quaternion.copy(q);cam.fov=vfov;cam.updateProjectionMatrix();}
-  else if(mode==='chase'){const d=heading(i);cam.position.copy(p).addScaledVector(d,-16).add(new THREE.Vector3(0,0,8));cam.fov=50;cam.updateProjectionMatrix();cam.lookAt(p.clone().addScaledVector(d,10));}
+  if(mode==='drone'){cam.position.copy(p);cam.quaternion.copy(q);cam.fov=vfov;cam.near=2;cam.updateProjectionMatrix();}   // clip fragments right in front of the lens
+  else if(mode==='chase'){const d=heading(i);cam.position.copy(p).addScaledVector(d,-16).add(new THREE.Vector3(0,0,8));cam.fov=50;cam.near=.5;cam.updateProjectionMatrix();cam.lookAt(p.clone().addScaledVector(d,10));}
   viewer.render();
   $('#timeline').value=Math.round(t/duration*1000);
   $('#clock').textContent=clock(t*scene.preview_speed);
+  markThumb(i);
   $('#where').textContent=`Keyframe ${i+1} of ${poses.length} · ${Math.round(pathLength[i])} m flown · ${Math.round(p.z+scene.utm_origin[2])} m above sea level`;
 }
 function setMode(next){
   mode=next;$$('.views button').forEach(b=>b.classList.toggle('active',b.dataset.view===mode));
   viewer.controls.enabled=mode==='orbit';
-  if(mode==='orbit'){const {p,q}=at(video.currentTime);const ahead=new THREE.Vector3(0,0,-1).applyQuaternion(q).multiplyScalar(18);
+  if(mode==='orbit'){const {p,q}=at(curT);viewer.camera.near=.05;const ahead=new THREE.Vector3(0,0,-1).applyQuaternion(q).multiplyScalar(18);
     viewer.camera.fov=45;viewer.camera.updateProjectionMatrix();viewer.controls.target.copy(p.clone().add(ahead));viewer.controls.update();}
-  apply(video.currentTime,true);
+  apply(curT,true);
 }
 function setPlaying(on){
   playing=on;$('#play').textContent=on?'❚❚':'▶';$('#play').setAttribute('aria-label',on?'Pause flight':'Play flight');
-  if(on)video.play().catch(()=>setPlaying(false));else video.pause();
+  if(on){const target=curT;video.play().then(()=>{if(Math.abs(video.currentTime-target)>.5)video.currentTime=target;}).catch(()=>setPlaying(false));}else video.pause();
 }
-function tick(){if(playing||mode!=='orbit')apply(video.currentTime);requestAnimationFrame(tick);}
+function tick(){if(playing&&!video.seeking&&Math.abs(video.currentTime-curT)<3)curT=video.currentTime;else if(playing&&!video.seeking)video.currentTime=curT;if(playing||mode!=='orbit')apply(curT);requestAnimationFrame(tick);}
+function seek(t){curT=Math.min(duration,Math.max(0,t));try{video.currentTime=curT;}catch{}apply(curT,true);}
 
 function metrics(){
   const s=evaluation.surface_shape_vs_lidar,v=evaluation.visible_completeness||{},fill=evaluation.with_gap_fill?.visible_completeness;
@@ -96,6 +98,44 @@ function inspect(e){
   const box=$('#inspect');box.hidden=false;box.style.left=Math.min(e.clientX+14,innerWidth-300)+'px';box.style.top=Math.min(e.clientY+14,innerHeight-150)+'px';
 }
 
+let thumbs=[];
+function buildStrip(){
+  thumbs=scene.thumbnail_frames.map(k=>({k,t:times[k]}));
+  $('#strip').innerHTML=thumbs.map(({k,t})=>`<button class="thumb" data-k="${k}" title="Jump to ${clock(t*scene.preview_speed)} of the flight"><img src="${base}frames/frame_${String(k).padStart(5,'0')}.jpg" alt="Drone camera at ${clock(t*scene.preview_speed)}" loading="lazy"><span>${clock(t*scene.preview_speed)}</span></button>`).join('');
+  $$('.thumb').forEach(b=>b.addEventListener('click',()=>{
+    const k=Number(b.dataset.k);setPlaying(false);collapseIntro();if(mode==='orbit')setMode('chase');seek(times[k]);
+    toast(document.body.classList.contains('comparing')?'Real frame and model at this moment':'Jumped here · the corner video shows the real camera · “Compare with real frame” overlays it');
+  }));
+}
+let activeThumb=-1;
+function markThumb(i){
+  let best=-1;thumbs.forEach(({k},n)=>{if(k<=i)best=n;});if(best===activeThumb)return;activeThumb=best;
+  $$('.thumb').forEach((b,n)=>b.classList.toggle('active',n===best));
+  $$('.thumb')[best]?.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+}
+function collapseIntro(){$('#intro').classList.add('collapsed');document.body.classList.add('started');}
+function openPanel(tab){
+  $('#panel').hidden=!tab;if(!tab){history.replaceState(null,'',location.pathname);return;}
+  $$('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  $('#tab-evidence').hidden=tab!=='evidence';$('#tab-how').hidden=tab!=='how';history.replaceState(null,'',`#${tab}`);
+}
+function buildPanel(){
+  const s=evaluation.surface_shape_vs_lidar,v=evaluation.visible_completeness||{},fill=evaluation.with_gap_fill?.visible_completeness;
+  $('#big-numbers').innerHTML=[[minsec(scene.fast_mode_seconds),'10-minute video to 3D, fast mode (target < 15 min)'],[metres(s.median_m),'median shape error of the shown model vs survey'],
+    ['0.5 m','absolute position with RTK GPS (0.41 m vertical)'],[pct(v.recall_1m),`visible scene within 1 m${fill?`, ${pct(fill.recall_1m)} with fill`:''}`]]
+    .map(([b,t])=>`<div><b>${b}</b><small>${t}</small></div>`).join('');
+  const rows=[['Fast mode (7 min 8 s)',.24],['High quality (14 min 28 s)',.379],['Maximum coverage (shown)',v.recall_1m]];if(fill)rows.push(['+ road gap fill (interpolated)',fill.recall_1m,true]);
+  $('#coverage-bars').innerHTML=rows.map(([l,x,interp])=>`<div class="bar"><span>${l}</span><div class="track"><div class="fill${interp?' interp':''}" style="width:${(x*100).toFixed(1)}%"></div></div><b>${(x*100).toFixed(1)}%</b></div>`).join('');
+  const m=scene.quality_stage_marks||{},t=scene.timings||{},cam=(scene.camera_solve_seconds||{}).total;
+  const steps=[['1','Read the flight','Any drone video (H.264 or HEVC, 1080p or 4K) plus GPS: DJI .SRT, flight logs, GPX or CSV. Camera intrinsics are estimated when no calibration is given.',''],
+    ['2','Solve the cameras','SuperPoint + LightGlue features and COLMAP photogrammetry, then locked to GPS and barometer.',cam?minsec(cam):''],
+    ['3','Predict depth','Depth Anything 3 predicts depth for four overlapping crops of every keyframe, each scaled to the solved tie points.',m.depth_done_at_s?minsec(m.depth_done_at_s-m.camera_solve_done_at_s):''],
+    ['4','Fuse the surface','GPU TSDF fusion in 60 m tiles keeps only surfaces the camera saw.',t['tiled GPU TSDF']?minsec(t['tiled GPU TSDF']):''],
+    ['5','Texture and fill','The mesh is photo-textured from the source frames; road holes get an optional, separately scored fill.',''],
+    ['6','Export six formats','OBJ, PLY, GLB, FBX, LAS and GeoTIFF in UTM, each reopened by an independent reader.',t.exports?minsec(t.exports):'']];
+  $('#steps').innerHTML=steps.map(([n,b,p,time])=>`<div class="step"><i>${n}</i><div><b>${b}</b><p>${p}</p></div><span>${time}</span></div>`).join('');
+}
+
 async function init(){
   viewer=new SceneViewer($('#scene'),{onStatus:t=>{$('#loading-text').textContent=t;},onPick:measured});
   const [s,ev,cams]=await Promise.all([json('scene.json'),json('evaluation.json'),json('cameras.json')]);scene=s;evaluation=ev;
@@ -107,20 +147,27 @@ async function init(){
   viewer.object.traverse(c=>{if(c.isMesh&&c.userData.fill)c.material.color.set(0x7d8fa3);});   // interpolated road reads as a muted blue-grey
   duration=scene.duration_s/scene.preview_speed;$('#total').textContent=clock(scene.duration_s);
   viewer.fit('overview');viewer.controls.enabled=false;
+  buildStrip();buildPanel();
   $('#loading').classList.add('done');apply(0,true);tick();
+  const hash=location.hash.slice(1);if(['evidence','how'].includes(hash)){collapseIntro();openPanel(hash);}
 }
 
-$('#start').addEventListener('click',()=>{$('#intro').classList.add('collapsed');document.body.classList.add('started');setMode('chase');setPlaying(true);});
-$('#explore-free').addEventListener('click',()=>{$('#intro').classList.add('collapsed');document.body.classList.add('started');setMode('orbit');viewer.fit('overview');});
+$$('[data-open]').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.open)));
+$$('.tabs button').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.tab)));
+$('#panel-close').addEventListener('click',()=>openPanel(null));
+addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(['evidence','how'].includes(h))openPanel(h);});
+$('#start').addEventListener('click',()=>{collapseIntro();setMode('chase');setPlaying(true);});
+$('#explore-free').addEventListener('click',()=>{collapseIntro();setMode('orbit');viewer.fit('overview');});
 $('.brand').addEventListener('click',e=>{e.preventDefault();$('#intro').classList.toggle('collapsed');});
-$('#play').addEventListener('click',()=>{if(!playing&&video.currentTime>=duration-.2)video.currentTime=0;setPlaying(!playing);$('#intro').classList.add('collapsed');document.body.classList.add('started');});
+$('#play').addEventListener('click',()=>{if(!playing&&curT>=duration-.2)seek(0);else if(!playing){try{video.currentTime=curT;}catch{}}setPlaying(!playing);collapseIntro();});
 video.addEventListener('ended',()=>setPlaying(false));
 video.addEventListener('click',()=>$('#compare').click());
-$('#timeline').addEventListener('input',e=>{video.currentTime=e.target.value/1000*duration;apply(video.currentTime,true);});
+$('#timeline').addEventListener('input',e=>seek(e.target.value/1000*duration));
+video.addEventListener('loadedmetadata',()=>{try{video.currentTime=curT;}catch{}});
 $$('.views button').forEach(b=>b.addEventListener('click',()=>{if(document.body.classList.contains('comparing')&&b.dataset.view!=='drone')$('#compare').click();setMode(b.dataset.view);}));
 $('#compare').addEventListener('click',()=>{
   const on=document.body.classList.toggle('comparing');$('#blend-wrap').hidden=!on;$('#compare').textContent=on?'Exit comparison':'Compare with real frame';
-  video.style.opacity=on?$('#blend').value/100:'';setMode(on?'drone':'chase');setTimeout(()=>{viewer.resize();apply(video.currentTime,true);},60);
+  video.style.opacity=on?$('#blend').value/100:'';try{video.currentTime=curT;}catch{}setMode(on?'drone':'chase');setTimeout(()=>{viewer.resize();apply(curT,true);},60);
   toast(on?'The real camera frame over the 3D model from the same camera pose. Drag the slider to blend.':'');
 });
 $('#blend').addEventListener('input',e=>{video.style.opacity=e.target.value/100;});
@@ -135,6 +182,6 @@ $('#export-obj').addEventListener('click',async()=>{const r=await viewer.export(
 const canvas=$('#scene');let down=null;
 canvas.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];if(mode!=='orbit'&&!document.body.classList.contains('comparing')){setMode('orbit');}});
 canvas.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down[0],e.clientY-down[1])<5&&!viewer.measuring)inspect(e);down=null;});
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();$('#play').click();}
-  if(e.code==='ArrowRight'||e.code==='ArrowLeft'){video.currentTime=Math.min(duration,Math.max(0,video.currentTime+(e.code==='ArrowRight'?2:-2)));apply(video.currentTime,true);}});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Escape'){openPanel(null);return;}if(e.code==='Space'){e.preventDefault();$('#play').click();}
+  if(e.code==='ArrowRight'||e.code==='ArrowLeft')seek(curT+(e.code==='ArrowRight'?2:-2));});
 init().catch(err=>{$('#loading-text').textContent='The 3D model could not be loaded: '+err.message;console.error(err);});

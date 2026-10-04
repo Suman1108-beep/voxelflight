@@ -17,8 +17,9 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "redirects": [
-      {"source": "/validation", "destination": "/workspace#validation", "type": 302},
-      {"source": "/pipeline", "destination": "/workspace#pipeline", "type": 302},
+      {"source": "/workspace", "destination": "/", "type": 302},
+      {"source": "/validation", "destination": "/#evidence", "type": 302},
+      {"source": "/pipeline", "destination": "/#how", "type": 302},
       {"source": "/signed-out", "destination": "/logout", "type": 302},
       {"source": "/signin-with-chatgpt", "destination": "/login", "type": 302},
       {"source": "/signout-with-chatgpt", "destination": "/account", "type": 302}

@@ -20,8 +20,8 @@
 <header class="topbar">
   <a class="brand" href="/" aria-label="VoxelFlight home"><img src="favicon.svg" alt="" width="28" height="28"><span>VoxelFlight</span></a>
   <nav class="links">
-    <a href="/workspace#validation">Evidence</a>
-    <a href="/workspace#pipeline">How it works</a>
+    <button class="link-button" data-open="evidence">Evidence</button>
+    <button class="link-button" data-open="how">How it works</button>
     <button id="downloads-button" class="link-button" aria-haspopup="true" aria-expanded="false">Downloads</button>
     <a href="/login" class="signin">Sign in</a>
   </nav>
@@ -58,6 +58,56 @@
   <button id="measure" class="tool">📏 Measure a distance</button>
   <button id="snapshot" class="tool">📷 Save image</button>
 </aside>
+
+<div id="strip" class="strip" aria-label="Flight timeline: click a frame to jump there"></div>
+
+<section id="panel" class="panel glass" hidden aria-label="Evidence and method">
+  <div class="panel-head">
+    <div class="tabs" role="tablist"><button role="tab" data-tab="evidence">Evidence</button><button role="tab" data-tab="how">How it works</button></div>
+    <button id="panel-close" class="close" aria-label="Close panel">✕</button>
+  </div>
+  <div id="tab-evidence" class="tab">
+    <p class="kicker">Measured, not claimed</p>
+    <h2>Every number is checked against survey data the pipeline never sees.</h2>
+    <p class="muted">Model shape and coverage are scored against Switzerland's national airborne laser survey (swisstopo swissSURFACE3D), camera positions against the dataset's reference trajectory. One evaluation-only alignment separates the model's shape from GPS placement error.</p>
+    <div id="big-numbers" class="big-numbers"></div>
+    <h3>How much of the visible scene is measured</h3>
+    <p class="muted small">Share of survey points the drone camera could see that have model surface within 1 m. Never-seen surfaces are not invented.</p>
+    <div id="coverage-bars" class="bars"></div>
+    <h3>Accuracy on every flight we tested</h3>
+    <div class="table-wrap"><table><thead><tr><th>Flight</th><th>Shape vs survey (median)</th><th>Absolute placement</th></tr></thead><tbody>
+      <tr><td>Zurich 10 min, maximum coverage <em>(shown model)</em></td><td>0.73 m</td><td>2.7 m · ordinary GPS</td></tr>
+      <tr><td>Zurich 10 min, high-quality (14 min 28 s)</td><td>0.59 m</td><td>2.7 m · ordinary GPS</td></tr>
+      <tr><td>Zurich 10 min, fast mode (7 min 8 s)</td><td>0.91 m</td><td>3.5 m · ordinary GPS</td></tr>
+      <tr><td>Zurich 60 s held-out flight</td><td>0.55 m</td><td>5.0 m · ordinary GPS</td></tr>
+      <tr><td>Toledo (USA) aerial, 120 m</td><td>0.85 m</td><td>3.1 m · ordinary GPS</td></tr>
+      <tr><td>Austria aerial, RTK GPS</td><td>—</td><td><b>0.5 m horizontal · 0.41 m vertical</b></td></tr>
+    </tbody></table></div>
+    <h3>SIH26158 requirements</h3>
+    <div class="table-wrap"><table class="req"><thead><tr><th>Requirement</th><th>Target</th><th>Measured</th><th>Status</th></tr></thead><tbody>
+      <tr><td>Processing speed</td><td>&lt;15 min for a 10-min video</td><td>7 min 8 s fast · 14 min 28 s high quality, one A100</td><td><span class="badge ok">Met</span></td></tr>
+      <tr><td>Spatial accuracy</td><td>≤1 m</td><td>Shape 0.59–0.91 m median; 0.5 m / 0.41 m absolute with RTK; ≈2.7 m with ordinary GPS</td><td><span class="badge ok">Met with RTK</span></td></tr>
+      <tr><td>Coverage</td><td>Entire visible scene</td><td>46.5 % measured within 1 m, 51.2 % with road gap fill</td><td><span class="badge part">Partial</span></td></tr>
+      <tr><td>3D output</td><td>Textured mesh or point cloud</td><td>Photo-textured mesh, 52 M-triangle mesh, point cloud</td><td><span class="badge ok">Met</span></td></tr>
+      <tr><td>Formats</td><td>OBJ, PLY, LAS, GeoTIFF, GLB, FBX</td><td>All six from every run, reopened by independent readers</td><td><span class="badge ok">Met</span></td></tr>
+      <tr><td>Input</td><td>1080p/4K video + GPS + metadata</td><td>1080p and real DJI 4K (H.264 + .SRT, HEVC + flight log); intrinsics estimated if missing</td><td><span class="badge ok">Met</span></td></tr>
+      <tr><td>Viewer</td><td>Web or desktop</td><td>This page: fly-through, real-frame overlay, heatmap, measure, downloads</td><td><span class="badge ok">Met</span></td></tr>
+    </tbody></table></div>
+    <p class="muted small">Full protocol and every run: <a href="https://github.com/Suman1108-beep/voxelflight/blob/main/vf2/RESULTS.md" target="_blank" rel="noreferrer">vf2/RESULTS.md</a> · <a href="assets/latest/evaluation.json" download>evaluation.json</a></p>
+  </div>
+  <div id="tab-how" class="tab" hidden>
+    <p class="kicker">From video to measured 3D</p>
+    <h2>One GPU pipeline, video on disk to six file formats.</h2>
+    <div id="steps" class="steps"></div>
+    <h3>Three modes, same pipeline</h3>
+    <div class="modes">
+      <div><b>Fast</b><span>7 min 8 s</span><small>visual odometry + metric depth, GPS fusion</small></div>
+      <div><b>High quality</b><span>14 min 28 s</span><small>photogrammetric cameras + Depth Anything 3</small></div>
+      <div><b>Maximum coverage</b><span>≈ 37 min</span><small>4 crops per frame, the model on this page</small></div>
+    </div>
+    <p class="muted small">Pretrained models only (DPVO, SuperPoint + LightGlue, COLMAP, Depth Anything 3, MapAnything, Open3D). Survey data and reference poses are used for scoring, never as input. Source: <a href="https://github.com/Suman1108-beep/voxelflight" target="_blank" rel="noreferrer">github.com/Suman1108-beep/voxelflight</a></p>
+  </div>
+</section>
 
 <div id="inspect" class="inspect glass" hidden></div>
 <div id="toast" class="toast glass" role="status" hidden></div>
