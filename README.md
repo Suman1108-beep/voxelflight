@@ -10,7 +10,7 @@ Single-pass drone video reconstruction with an inspectable 3D workspace.
 
 **[Open the live 3D explorer](https://voxelflight-3d.web.app/)**: fly the drone's real path in sync with its video, overlay the real camera frame on the model from the same pose, colour the model by its error against the national laser survey, and click any point for its coordinates.
 
-## Results at a glance (4 October 2026, VoxelFlight v2 on one A100)
+## Results at a glance (VoxelFlight v2 on one A100)
 
 | SIH26158 target | Measured result (independent references, never pipeline inputs) |
 |---|---|
@@ -182,7 +182,7 @@ Reference poses enter evaluation only. The aligned camera-path score removes glo
 
 No credentials, private user jobs, model caches or private Git history are included.
 
-## VoxelFlight v2 (3–4 October 2026): A100 pipeline and measured results
+## VoxelFlight v2: A100 pipeline and measured results
 
 The `vf2/` folder holds the A100 pipeline built after the September submission (`vf2/README.md` explains how to run it).
 Every number below is measured against reference data the pipeline never reads (`vf2/RESULTS.md` has the full protocol):
