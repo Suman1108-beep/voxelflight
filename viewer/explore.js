@@ -2,6 +2,7 @@
 // colour the model by its error against survey LiDAR, and inspect or measure any point.
 import * as THREE from 'three';
 import {SceneViewer} from './scene.js';
+import {views,showTransition,hideTransition,motionDisabled} from './pixel.js';
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const base='assets/latest/',video=$('#flight');
@@ -115,7 +116,15 @@ function markThumb(i){
 }
 function collapseIntro(){$('#intro').classList.add('collapsed');document.body.classList.add('started');}
 const TABS=['guide','evidence','how'];
-function openPanel(tab){
+let shownTab=null,scoutTimer=0;
+// The pixel scout runs across briefly when switching views; the new view is already rendered underneath.
+function scout(tab){
+  if(motionDisabled())return;const back=document.activeElement;clearTimeout(scoutTimer);
+  showTransition(views[tab].title,views[tab].detail,{destination:tab,inApp:true});
+  scoutTimer=setTimeout(()=>{hideTransition();back?.focus?.({preventScroll:true});},480);
+}
+function openPanel(tab,{animate=true}={}){
+  if(tab&&animate&&tab!==shownTab)scout(tab);shownTab=tab;
   $('#panel').hidden=!tab;if(!tab){history.replaceState(null,'',location.pathname);return;}
   $$('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   for(const t of TABS)$(`#tab-${t}`).hidden=t!==tab;history.replaceState(null,'',`#${tab}`);
@@ -150,7 +159,7 @@ async function init(){
   viewer.fit('overview');viewer.controls.enabled=false;
   buildStrip();buildPanel();
   $('#loading').classList.add('done');apply(0,true);tick();
-  const hash=location.hash.slice(1);if(TABS.includes(hash)){collapseIntro();openPanel(hash);}
+  const hash=location.hash.slice(1);if(TABS.includes(hash)){collapseIntro();openPanel(hash,{animate:false});}
 }
 
 $$('[data-open]').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.open)));

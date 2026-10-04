@@ -1,0 +1,29 @@
+/* Pixel scout page transition for pages that do not load pixel.css (explorer, studio).
+   Every rule is scoped to the overlay so the host page's own look is untouched. */
+@font-face{font-family:Silkscreen;src:url('/assets/fonts/Silkscreen-Regular.ttf') format('truetype');font-display:swap;font-weight:400}
+.route-transition{--pixel-font:Silkscreen,"Courier New",monospace;--mint:#9ee8cc;--transition-accent:#9bf3d4;position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;backdrop-filter:blur(5px);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(ellipse at 45% 35%,#25456844,transparent 54%),radial-gradient(ellipse at 65% 70%,#59317c3d,transparent 45%),#060b18f5}
+.route-transition[hidden]{display:none}
+.route-transition[data-destination=evidence]{--transition-accent:#c4a2ff}
+.route-transition[data-destination=how]{--transition-accent:#92bdff}
+.route-transition h2{font-family:var(--pixel-font);font-size:24px;line-height:1.45;color:#fbf1ff;letter-spacing:-.7px;font-weight:400;margin:24px 0 12px}
+.route-transition p{font-size:14px;line-height:1.75;max-width:345px;margin:0 auto 18px;color:#becce0}
+.route-transition button{font:inherit;font-size:12px;color:#a5d4c9;border:0;background:none;padding:10px;margin-top:8px;cursor:pointer}
+.route-transition .transition-card{width:min(470px,calc(100vw - 40px));padding:0 27px 17px;border:1px solid #746690;border-top:3px solid var(--transition-accent);background:linear-gradient(140deg,#19283a,#251e3b 68%,#152a36);box-shadow:7px 7px 0 #020613,0 0 70px #a681f412;position:relative}
+.route-transition .transition-card:before,.route-transition .transition-card:after{content:"";width:7px;height:7px;background:var(--transition-accent);position:absolute;top:-5px}
+.route-transition .transition-card:before{left:-4px}.route-transition .transition-card:after{right:-4px}
+.route-transition .transition-topline{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #85769b4f;font-family:var(--pixel-font);color:var(--transition-accent);font-size:15px;gap:16px}
+.route-transition .transition-context{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:1.4px;color:#bdb2cd}
+.route-transition .scout-lane{height:127px;width:188px;margin:14px auto 0;position:relative;display:flex;align-items:flex-end;justify-content:center;border-bottom:2px solid #7dbbad88;background:repeating-linear-gradient(90deg,transparent 0 25px,#cae9e54d 25px 32px,transparent 32px 40px) 0 121px/100% 2px no-repeat}
+.route-transition .runner{width:80px;height:100px;flex:none;margin-bottom:12px;background:url('/assets/art/survey-robot-run.png') 0 -55px/640px 213.333px no-repeat;image-rendering:pixelated;animation:survey-run .65s steps(8) infinite,scout-traverse 1.6s steps(14) infinite alternate}
+.route-transition .transition-destinations{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:20px -8px 4px}
+.route-transition .transition-destinations[hidden]{display:none}
+.route-transition .transition-destinations>span{font-size:11px;padding:6px 7px;border:1px solid #5f58784d;color:#b2aac4;background:#0c14242b}
+.route-transition .transition-destinations>span.active{color:var(--transition-accent);border-color:var(--transition-accent);background:#c4a2ff0c}
+.route-transition.in-app-transition .transition-card{animation:card-arrive .14s steps(4) both}
+.route-transition.in-app-transition .runner{animation-duration:.65s,.48s;animation-iteration-count:infinite,1;animation-direction:normal,normal;animation-fill-mode:none,both}
+.motion-paused .route-transition .runner{animation-play-state:paused}
+@keyframes survey-run{to{background-position:-640px -55px}}
+@keyframes scout-traverse{from{translate:-48px 0}to{translate:48px 0}}
+@keyframes card-arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:760px){.route-transition .transition-card{padding:0 19px 13px}.route-transition h2{font-size:22px}.route-transition .transition-topline{font-size:14px}.route-transition .transition-destinations{gap:5px}.route-transition .transition-destinations>span{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.route-transition{backdrop-filter:none}.route-transition .runner,.route-transition .transition-card{animation:none!important;translate:none!important}}

@@ -2,6 +2,7 @@
 // and open your own GLB/PLY models. Uses the same /api job contract as the processing backend (vf2/cloud).
 import {validateVideoFile} from './video-input.js';
 import {sessionHeaders} from './session-bridge.js';
+import './pixel.js';
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
