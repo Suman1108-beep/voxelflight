@@ -24,8 +24,9 @@
   <nav class="links">
     <a href="/">Explore</a>
     <a href="/studio" class="current" aria-current="page">Studio</a>
+    <a href="/#guide">Guide</a>
     <a href="/#evidence">Evidence</a>
-    <a href="/#how">Method</a>
+    <a href="/#how">How it works</a>
     <a href="/login?return_to=/studio" class="signin" data-account-link>Sign in</a>
   </nav>
 </header>
@@ -83,6 +84,15 @@
     </section>
 
     <div class="side">
+      <section class="card glass" aria-labelledby="prep-title">
+        <div class="card-head"><h2 id="prep-title">Before you upload</h2><a class="link-button" href="/#guide">Operator guide</a></div>
+        <ul class="checklist">
+          <li><b>One continuous flight</b><span>MP4 or MOV, 1080p or 4K, up to 30 minutes, unedited.</span></li>
+          <li><b>The GPS log from the same flight</b><span>DJI: turn on Video Subtitles (.SRT) or export the flight record (.csv). GPX and JSON also work.</span></li>
+          <li><b>Optional</b><span>RTK/PPK positions for sub-metre placement; a camera calibration file.</span></li>
+          <li><b>Pick a mode</b><span>Fast for checks · High quality for accuracy · Maximum coverage for the most surface.</span></li>
+        </ul>
+      </section>
       <section class="card glass" aria-labelledby="runs-title">
         <div class="card-head"><span class="step-dot">2</span><h2 id="runs-title">Reconstructions</h2><button id="refresh" class="link-button" type="button">Refresh</button></div>
         <div id="runs" class="runs">

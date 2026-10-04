@@ -51,3 +51,9 @@ test('the studio is the signed-in home: checks inputs locally, submits to the jo
  assert.match(await read('firebase/build.mjs'),/\['studio.html','studio.html'\]/);
  assert.match(await read('firebase.json'),/"source": "\/workspace", "destination": "\/studio"/);
 });
+test('operators find the same navigation and a step-by-step guide on every working page',async()=>{
+ const explore=await read('explore.html'),studio=await read('studio.html'),js=await read('explore.js');
+ for(const html of [explore,studio])for(const label of ['Studio','Guide','Evidence','How it works'])assert.match(html,new RegExp(`>${label}<`));
+ assert.match(explore,/id="tab-guide"/);assert.match(explore,/Keep the GPS log/);assert.match(explore,/GeoTIFF surface model/);
+ assert.match(js,/TABS=\['guide','evidence','how'\]/);assert.match(studio,/Before you upload/);assert.match(explore,/class="signin" data-account-link/);
+});

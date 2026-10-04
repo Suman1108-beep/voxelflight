@@ -20,11 +20,12 @@
 <header class="topbar">
   <a class="brand" href="/" aria-label="VoxelFlight home"><img src="favicon.svg" alt="" width="28" height="28"><span>VoxelFlight</span></a>
   <nav class="links">
+    <a href="/studio">Studio</a>
+    <button class="link-button" data-open="guide">Guide</button>
     <button class="link-button" data-open="evidence">Evidence</button>
     <button class="link-button" data-open="how">How it works</button>
     <button id="downloads-button" class="link-button" aria-haspopup="true" aria-expanded="false">Downloads</button>
-    <a href="/studio">Studio</a>
-    <a href="/login?return_to=/studio" class="signin">Sign in</a>
+    <a href="/login?return_to=/studio" class="signin" data-account-link>Sign in</a>
   </nav>
   <div id="downloads" class="downloads glass" hidden>
     <a href="assets/latest/reconstruction_mesh.glb" download>GLB · photo-textured mesh</a>
@@ -64,10 +65,10 @@
 
 <section id="panel" class="panel glass" hidden aria-label="Evidence and method">
   <div class="panel-head">
-    <div class="tabs" role="tablist"><button role="tab" data-tab="evidence">Evidence</button><button role="tab" data-tab="how">How it works</button></div>
+    <div class="tabs" role="tablist"><button role="tab" data-tab="guide">Guide</button><button role="tab" data-tab="evidence">Evidence</button><button role="tab" data-tab="how">How it works</button></div>
     <button id="panel-close" class="close" aria-label="Close panel">✕</button>
   </div>
-  <div id="tab-evidence" class="tab">
+  <div id="tab-evidence" class="tab" hidden>
     <p class="kicker">Measured, not claimed</p>
     <h2>Every number is checked against survey data the pipeline never sees.</h2>
     <p class="muted">Model shape and coverage are scored against Switzerland's national airborne laser survey (swisstopo swissSURFACE3D), camera positions against the dataset's reference trajectory. One evaluation-only alignment separates the model's shape from GPS placement error.</p>
@@ -95,6 +96,53 @@
       <tr><td>Viewer</td><td>Web or desktop</td><td>This page: fly-through, real-frame overlay, heatmap, measure, downloads</td><td><span class="badge ok">Met</span></td></tr>
     </tbody></table></div>
     <p class="muted small">Full protocol and every run: <a href="https://github.com/Suman1108-beep/voxelflight/blob/main/vf2/RESULTS.md" target="_blank" rel="noreferrer">vf2/RESULTS.md</a> · <a href="assets/latest/evaluation.json" download>evaluation.json</a></p>
+  </div>
+  <div id="tab-guide" class="tab" hidden>
+    <p class="kicker">Operator guide</p>
+    <h2>From one drone flight to a measured 3D model</h2>
+    <p class="muted">What to record, what to upload and how to read the result. The same steps apply to your own flights in the Studio and to the sample project on this page.</p>
+    <h3>1 · Fly and record</h3>
+    <div class="steps">
+      <div class="step"><i>A</i><div><b>Fly one continuous pass</b><p>Move steadily along the area, at street level or 60–120 m. Overlap between consecutive frames matters more than speed; avoid sharp turns and long hovering.</p></div><span></span></div>
+      <div class="step"><i>B</i><div><b>Record the video</b><p>MP4 or MOV, H.264 or HEVC, 1080p or 4K, up to 30 minutes. Upload the original file: no cropping, stabilisation or speed changes.</p></div><span></span></div>
+      <div class="step"><i>C</i><div><b>Keep the GPS log</b><p>DJI: turn on <em>Video Subtitles</em> so an .SRT file is saved with each video, or export the flight record (.csv). GPX or JSON logs from other drones also work.</p></div><span></span></div>
+      <div class="step"><i>D</i><div><b>Optional inputs</b><p>RTK/PPK positions give sub-metre absolute placement. A camera calibration file helps; without one the intrinsics are estimated from the video.</p></div><span></span></div>
+    </div>
+    <h3>2 · Upload in the Studio</h3>
+    <div class="steps">
+      <div class="step"><i>A</i><div><b>Sign in and add your files</b><p>Open the <a href="/studio">Studio</a>, add the video and its GPS log. The browser checks resolution, length and GPS coverage before anything is uploaded.</p></div><span></span></div>
+      <div class="step"><i>B</i><div><b>Choose a mode</b><p>Fast for quick checks, High quality for the best accuracy, Maximum coverage for the most surface.</p></div><span>7 · 14 · 37 min</span></div>
+      <div class="step"><i>C</i><div><b>Follow progress</b><p>Runs continue if you close the page; finished runs appear under Reconstructions in the Studio.</p></div><span></span></div>
+    </div>
+    <h3>3 · Review the model</h3>
+    <div class="steps">
+      <div class="step"><i>A</i><div><b>Fly the drone's path</b><p>Playback follows the drone in sync with its video. Click any frame in the timeline to jump there.</p></div><span></span></div>
+      <div class="step"><i>B</i><div><b>Compare with the real frame</b><p>Overlays the camera image on the model from the same position. The quickest way to spot missing or misplaced surfaces.</p></div><span></span></div>
+      <div class="step"><i>C</i><div><b>Inspect and measure</b><p>Turn on the accuracy heatmap, click a point for its coordinates and survey distance, or measure a distance in metres.</p></div><span></span></div>
+    </div>
+    <h3>4 · Export</h3>
+    <div class="table-wrap"><table><thead><tr><th>File</th><th>Use it for</th><th>Coordinates</th></tr></thead><tbody>
+      <tr><td>GeoTIFF surface model</td><td>GIS (QGIS, ArcGIS): elevation, mapping, volumes</td><td>UTM zone, metres</td></tr>
+      <tr><td>LAS point cloud</td><td>Survey and GIS tools, comparison with LiDAR</td><td>UTM zone, metres</td></tr>
+      <tr><td>PLY point cloud</td><td>CloudCompare, MeshLab</td><td>Local metres, origin in metadata</td></tr>
+      <tr><td>OBJ / FBX mesh</td><td>CAD, Blender, game engines</td><td>Local metres</td></tr>
+      <tr><td>GLB textured mesh</td><td>Web viewers, presentations, AR</td><td>Local metres</td></tr>
+    </tbody></table></div>
+    <h3>Accuracy you can expect</h3>
+    <div class="table-wrap"><table><tbody>
+      <tr><td>Model shape (relative)</td><td>0.6–0.9 m median against survey LiDAR</td></tr>
+      <tr><td>Absolute position, ordinary GPS</td><td>≈ 2.7–3.5 m, limited by the GPS</td></tr>
+      <tr><td>Absolute position, RTK GPS</td><td><b>0.5 m horizontal · 0.41 m vertical</b></td></tr>
+      <tr><td>Coverage</td><td>Surfaces the camera saw. Never-seen sides stay empty; the road fill is marked as interpolated.</td></tr>
+    </tbody></table></div>
+    <h3>Troubleshooting</h3>
+    <div class="table-wrap"><table><thead><tr><th>If</th><th>Then</th></tr></thead><tbody>
+      <tr><td>No GPS log is available</td><td>The shape is still reconstructed, but not placed on the map. Add the .SRT or flight record.</td></tr>
+      <tr><td>The Studio shows no video preview</td><td>Common for HEVC files; the server converts them during processing.</td></tr>
+      <tr><td>The video is longer than 30 minutes</td><td>Split it into parts and upload each with its log.</td></tr>
+      <tr><td>The model has gaps</td><td>Fly slower with more overlap, and include oblique views of facades.</td></tr>
+      <tr><td>The processing service is offline</td><td>Uploads are paused during evaluation. The sample project on this page shows a finished result.</td></tr>
+    </tbody></table></div>
   </div>
   <div id="tab-how" class="tab" hidden>
     <p class="kicker">From video to measured 3D</p>
