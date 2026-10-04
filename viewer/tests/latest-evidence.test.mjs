@@ -28,11 +28,19 @@ test('the saved run is a continuous sub-15-minute benchmark and every asset fits
  for(const name of ['reconstruction_mesh.glb','reconstruction_mesh.fbx','pointcloud.ply','reconstruction_utm.las','surface_model.tif'])assert.ok(m[name],'manifest lists '+name);
  for(const [name,file] of Object.entries(m)){const data=await readFile(new URL('../assets/latest/'+name,import.meta.url));assert.equal(data.length,file.bytes);assert.ok(data.length<25*1024*1024);}
 });
-test('public root is the login page, with the real workspace preserved after sign-in',async()=>{
- assert.match(await read('firebase/build.mjs'),/\['index.html','login.html'\]/);
+test('public root is the 3D explorer; sign-in and the full workspace stay available',async()=>{
+ assert.match(await read('firebase/build.mjs'),/\['index.html','explore.html'\]/);
+ assert.match(await read('firebase/build.mjs'),/\['login.html','login.html'\]/);
  assert.match(await read('firebase/build.mjs'),/\['workspace.html','index.html'\]/);
  assert.match(await read('firebase/auth.js'),/get\('return_to'\)\|\|'\/workspace'/);
  assert.match(await read('index.html'),/Layers, camera &amp; measurements|Layers, camera & measurements/);
  assert.match(await read('index.html'),/Earlier appearance experiment/);
  assert.doesNotMatch(await read('index.html'),/0\.810 m|5m34 recorded|Recorded run: 180|FBX is not available/);
+});
+test('the explorer syncs exact camera poses with the video and colours the model by survey error',async()=>{
+ const cams=JSON.parse(await read('assets/latest/cameras.json')),s=JSON.parse(await read('assets/latest/scene.json'));
+ assert.equal(cams.c2w.length,s.keyframes);assert.equal(cams.c2w[0].length,12);assert.equal(s.frame_times.length,s.keyframes);
+ const errors=await readFile(new URL('../assets/latest/errors.bin',import.meta.url));assert.ok(errors.length>1000);
+ const js=await read('explore.js');assert.match(js,/slerp/);assert.match(js,/errors\.bin/);assert.match(js,/evaluation-only alignment/);
+ assert.match(await read('explore.html'),/Compare with real frame/);
 });

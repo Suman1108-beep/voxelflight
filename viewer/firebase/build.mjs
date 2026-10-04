@@ -17,10 +17,10 @@ export async function prepareFirebase(root,dist){
         <button class="provider primary" data-firebase-provider="google" disabled><span class="provider-icon google" aria-hidden="true">G</span><span>Continue with Google</span><span class="provider-state">Connecting</span></button>${settings.providers.includes('github')?`
         <button class="provider" data-firebase-provider="github" disabled><span class="provider-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 .9a11.1 11.1 0 0 0-3.5 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.31-3.76-1.31-.5-1.29-1.24-1.63-1.24-1.63-1.01-.7.08-.68.08-.68 1.12.08 1.7 1.15 1.7 1.15.99 1.7 2.6 1.21 3.24.92.1-.72.38-1.21.7-1.49-2.47-.28-5.07-1.24-5.07-5.49 0-1.21.43-2.2 1.15-2.98-.12-.28-.5-1.41.1-2.94 0 0 .94-.3 3.05 1.14A10.6 10.6 0 0 1 12 6.2c.94 0 1.88.13 2.76.37 2.12-1.44 3.05-1.14 3.05-1.14.61 1.53.23 2.66.11 2.94.72.78 1.15 1.77 1.15 2.98 0 4.27-2.6 5.2-5.08 5.48.4.35.75 1.03.75 2.07v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg></span><span>Continue with GitHub</span><span class="provider-state">Connecting</span></button>`:''}
       </div></div>`;
-  for(const [destination,source] of [['index.html','login.html'],['login.html','login.html'],['account.html','account.html'],['logout.html','logout.html'],['workspace.html','index.html'],['engine.html','engine.html']]){
+  for(const [destination,source] of [['index.html','explore.html'],['explore.html','explore.html'],['login.html','login.html'],['account.html','account.html'],['logout.html','logout.html'],['workspace.html','index.html'],['engine.html','engine.html']]){
     let html=await readFile(resolve(root,source),'utf8');
     html=html.replace(/<script type="module" src="\/entrance\.js"><\/script>/g,'');
-    html=html.replace('</head>',scripts+'</head>');
+    if(source!=='explore.html')html=html.replace('</head>',scripts+'</head>');   // the public explorer needs no sign-in code
     html=html.replace(/href="(?:\/)?engine\.html"/g,'href="/engine"');
     html=html.replace(/<a href="\/account"([^>]*)>Account<\/a>/g,'<a href="/account"$1 data-account-link>Account</a>');
     html=html.replaceAll('Processing workstation required','Authenticated processing queue')

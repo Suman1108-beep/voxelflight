@@ -147,9 +147,19 @@
       "sha256": "9b719e559f259fecef23bf4bb4c5b6fe590581fe4c6597f50f6f0cea78f4f76d"
     },
     {
+      "path": "assets/latest/cameras.json",
+      "bytes": 80340,
+      "sha256": "977e6e16a4314430ac6bb57c658b31f386646a506b86e661486ef6d93985b044"
+    },
+    {
       "path": "assets/latest/coverage.json",
       "bytes": 32286,
       "sha256": "ca8b91b69f14b7968c4cfef45b2f56449b19db770eb7b5af160df9efd853a662"
+    },
+    {
+      "path": "assets/latest/errors.bin",
+      "bytes": 259323,
+      "sha256": "2d3cdce42e8f64fd49bebd4b4f3003f9401e3e5b8b1e535b5de139e8c8e7e2c8"
     },
     {
       "path": "assets/latest/evaluation.json",

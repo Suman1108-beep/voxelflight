@@ -8,6 +8,8 @@ Single-pass drone video reconstruction with an inspectable 3D workspace.
 
 *Photo-textured maximum-coverage model of the 10-minute Zurich flight in the live viewer.*
 
+**[Open the live 3D explorer](https://voxelflight-3d.web.app/)**: fly the drone's real path in sync with its video, overlay the real camera frame on the model from the same pose, colour the model by its error against the national laser survey, and click any point for its coordinates.
+
 ## Results at a glance (4 October 2026, VoxelFlight v2 on one A100)
 
 | SIH26158 target | Measured result (independent references, never pipeline inputs) |
