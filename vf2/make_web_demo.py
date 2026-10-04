@@ -26,6 +26,16 @@ for vox in (0.15, 0.2, 0.25, 0.3, 0.4):
         break
 print("web mesh voxel", vox, "triangles", len(F), "bytes", os.path.getsize(out + "/reconstruction_mesh.glb"))
 write_fbx(out + "/reconstruction_mesh.fbx", V, F, C)
+textured = os.environ.get("VF_TEXTURED")   # photo-textured web GLB from texture_atlas.py (Z-up local frame), replaces the coloured one
+if textured and os.path.getsize(textured) <= MAX_FILE:
+    shutil.copy(textured, out + "/reconstruction_mesh.glb"); tex_rep = json.load(open(os.path.join(os.path.dirname(textured), "texture_report.json")))
+    F = np.zeros((tex_rep["triangles"], 3)); print("web mesh: photo-textured", tex_rep["triangles"], "triangles")
+fill = os.environ.get("VF_FILL")           # interpolated gap-fill layer from fill_holes.py, shipped separately and tinted
+if fill:
+    fm = o3d.io.read_triangle_mesh(fill); FCv = (np.clip(np.asarray(fm.vertex_colors), 0, 1) * 255).astype(np.uint8)
+    trimesh.Trimesh(np.asarray(fm.vertices), np.asarray(fm.triangles), vertex_colors=np.column_stack([FCv, np.full(len(FCv), 255, np.uint8)]),
+                    process=False).export(out + "/fill_mesh.glb")
+    fill_rep = json.load(open(os.path.join(os.path.dirname(os.path.dirname(fill)), "fill_report.json")))
 
 # --- point samples ---
 pc = o3d.io.read_point_cloud(run + "/model/model_points.ply")
@@ -76,10 +86,10 @@ json.dump({"bounds": [lo.tolist(), hi.tolist()], "resolution_m": res, "cells": [
 
 # --- scene.json ---
 stages = {k: float(v) for k, v in rep["stage_seconds"].items() if not k.startswith(" ")}
-json.dump({"keyframes": int(K), "duration_s": round(nfr / fps, 1), "source_frames": nfr, "run_date": "2026-10-03", "run_id": os.path.basename(run.rstrip("/")),
+json.dump({"keyframes": int(K), "duration_s": round(nfr / fps, 1), "source_frames": nfr, "run_date": os.environ.get("VF_RUN_DATE", "2026-10-03"), "run_id": os.path.basename(run.rstrip("/")),
            "thumbnail_frames": thumbs, "frame_times": [float(sf / fps / SPEED) for sf in vfr], "preview_speed": SPEED,
            "point_count": int(len(P)), "web_point_count": int(len(Ps)), "mesh_triangles": int(full_tris), "web_mesh_triangles": int(len(F)),
-           "web_mesh_voxel_m": vox, "timings": stages, "processing_wall_seconds": float(rep.get("processing_wall_seconds", sum(v for k, v in rep["stage_seconds"].items() if not k.startswith(" ")))),
+           "web_mesh_voxel_m": vox, "web_mesh_textured": bool(textured), "fill_layer": fill_rep if fill else None, "timings": stages, "processing_wall_seconds": float(rep.get("processing_wall_seconds", sum(v for k, v in rep["stage_seconds"].items() if not k.startswith(" ")))),
            "parallel_stage_seconds": {k.strip(): float(v) for k, v in rep["stage_seconds"].items() if k.startswith(" ")},
            "runtime_scope": "Continuous end-to-end run on one A100: video on disk -> all six export formats.",
            "mode": rep.get("mode", "fast"), "serial": rep.get("serial", False), "tiled": rep.get("tiled", False), "views": rep.get("views"), "time_is_sum_of_stages": rep.get("time_is_sum_of_stages", False),
@@ -97,7 +107,11 @@ json.dump({"run_id": os.path.basename(run.rstrip("/")), "keyframes": int(K),
            "absolute_camera_error": ev["camera_direct"], "absolute_camera_error_horizontal_rmse_m": ev["camera_direct_horizontal_rmse_m"],
            "absolute_camera_error_vertical_rmse_m": ev["camera_direct_vertical_rmse_m"], "sim3_camera_error": ev["camera_sim3"],
            "surface_shape_vs_lidar": ev["surface_all_after_eval_rigid_icp"], "surface_absolute_vs_lidar": ev["surface_all"],
-           "visible_completeness": ev.get("visible_completeness"), "f_score_1m": ev.get("f_score_1m")}, open(out + "/evaluation.json", "w"), indent=1)
+           "visible_completeness": ev.get("visible_completeness"), "f_score_1m": ev.get("f_score_1m"),
+           "with_gap_fill": (lambda e: {"visible_completeness": e.get("visible_completeness"), "f_score_1m": e.get("f_score_1m"),
+                                        "surface_shape_vs_lidar": e["surface_all_after_eval_rigid_icp"],
+                                        "note": "measured surface + interpolated fill layer, scored with the same protocol"})(json.load(open(os.environ["VF_FILL_EVAL"])))
+                            if os.environ.get("VF_FILL_EVAL") else None}, open(out + "/evaluation.json", "w"), indent=1)
 
 # --- manifest (every file except thumbnails) ---
 man = {}

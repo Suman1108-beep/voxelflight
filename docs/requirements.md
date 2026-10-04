@@ -1,31 +1,37 @@
-# SIH26158 requirements and current status
+# SIH26158 requirements and measured evidence
 
-Source: the problem-statement document supplied to the team, printed pages 37-39, titled **Single-Pass Drone Video to Accurate 3D Model Generation System**. The supplied extract identifies the organisation as National Technical Research Organisation, category Software, theme Drone/Robotics. Dataset availability is stated as real time.
+Source: the problem-statement document supplied to the team (printed pages 37–39), **Single-Pass Drone Video to Accurate
+3D Model Generation System**, National Technical Research Organisation, category Software, theme Drone/Robotics.
+Dataset availability is stated as real time.
 
-This is an evidence checklist, not an official score or certificate.
+Every number below was measured by the VoxelFlight v2 pipeline (`vf2/`) on one NVIDIA A100-40GB and scored against
+**independent references the pipeline never reads** (national airborne LiDAR and the Zurich reference poses). Run names
+and full tables are in [`vf2/RESULTS.md`](../vf2/RESULTS.md). This is an evidence checklist, not an official score.
 
-| Requirement | Requested target | Current evidence |
-|---|---|---|
-| Input | 1080p/4K video, GPS and flight metadata | Video/image-sequence processing and supported telemetry/calibration parsers exist. Arbitrary formats and 4K robustness are not exhaustively tested. |
-| Output | 3D mesh / point cloud | Actual saved meshes and point clouds are available. |
-| Speed | **Less than 15 minutes for a 10-minute video** | Not benchmarked on a ten-minute input. Short-sequence timings are not proof. |
-| Spatial accuracy | **≤1 m** | Not verified against independent surface ground truth. Aligned trajectory RMSE is a different metric. |
-| Coverage | Entire visible scene | Partial coverage with holes and artifacts. |
-| Formats | OBJ, PLY, LAS, GeoTIFF, GLB/glTF, FBX | OBJ, PLY, LAS, GeoTIFF and GLB are available. FBX is not demonstrated. |
-| Visualization | Web or desktop | Public browser viewer with video, orbit controls, layers, measurement and downloads. |
-| New/unseen input | Single moving-drone pass | Preview inference code exists; broad unseen-flight robustness is not established. |
-| Optional sensors | IMU, barometer, camera intrinsics, RTK/PPK | Calibration and selected telemetry support exist. Full inertial integration and all optional sensor formats are not established. |
+| Requirement | Target | Measured evidence | Status |
+|---|---|---|---|
+| Input | 1080p/4K video, GPS and flight metadata | 10-min 1080p Zurich flight; real DJI 4K: H.264 with `.SRT` (Austria, BAMBI) and HEVC with a DJI flight-record CSV (Colorado) in 5 min 41 s and 7 min 45 s end to end (fast-mode geometry on these high-altitude clips is ≈ 1.7–1.8 m shape, so not sub-metre). Telemetry: DJI SRT (all common firmware styles), DJI/AirData flight records, GPX, JSON, per-frame CSV; HEVC is transcoded; missing intrinsics are estimated | Met |
+| Output | Textured mesh or point cloud | Coloured mesh (up to 52 M triangles), photo-textured mesh (atlas baked from the source frames; 6K on the website, 8K in the run folder), coloured point cloud | Met |
+| Speed | < 15 min for a 10-min video | Fast mode **7 min 8 s**; high-quality mode **14 min 28 s** with Depth Anything 3 (14 min 12 s with MapAnything), each one continuous run from video on disk to all exports. The maximum-coverage model is slower (≈ 37 min, sum of stages) | Met |
+| Spatial accuracy | ≤ 1 m | Model shape 0.55–0.91 m (0.59 m for the 15-minute high-quality model, 0.73 m for the maximum-coverage model) median vs survey LiDAR; **absolute 0.5 m horizontal / 0.41 m vertical with RTK** (Austria); ≈ 2.7 m with consumer GNSS | Met with RTK; shape met |
+| Coverage | Entire visible scene | Visible survey points within 1 m: fast 24 %, high quality 37.9 % (DA3), maximum coverage **46.5 %**; with the tinted ground-aware gap-fill layer **51.2 %** (68.2 % within 2 m). Surfaces never seen by the camera are left empty or marked as interpolated | Partial (46.5 % measured, 51.2 % with fill) |
+| Formats | OBJ, PLY, LAS, GeoTIFF, GLB/glTF, FBX | All six from every run (FBX by our own binary 7.4 writer), each reopened by an independent reader (`vf2/verify_exports.py`) | Met |
+| Visualisation | Web or desktop | https://voxelflight-3d.web.app: flight video, 3D orbit, layers (incl. the gap-fill layer), measurement, downloads | Met |
+| New input | Single moving-drone pass | Zurich (street level), Toledo (aerial stills), Austria helenenschacht (RTK), BAMBI and Colorado (real 4K) | Met on 5 flights |
+| Optional sensors | IMU, barometer, intrinsics, RTK/PPK | Barometer fused for height; intrinsics used when given, estimated otherwise; RTK/PPK via position accuracy weights. IMU not yet fused | Partial |
 
-The model targets observed façades, structures, road/terrain context and vegetation. It cannot truthfully present wholly occluded roofs or backsides as measured surfaces. Additional validation is required for moving objects, blur, shadows, compression, GPS noise and weak viewing geometry.
+## Evaluation weights in the problem statement
 
-## Supplied evaluation weights
+Reconstruction accuracy 30 %; model completeness 20 %; processing speed 20 %; innovation 15 %; scalability 10 %; user
+interface 5 %.
 
-Reconstruction accuracy 30%; model completeness 20%; processing speed 20%; innovation 15%; scalability 10%; user interface 5%. These weights describe the supplied rubric, not scores awarded to VoxelFlight.
+## What is still open
 
-## Next acceptance tests
+- **Coverage of the whole visible scene.** No single-pass method measures every visible surface; grazing facades, ground
+  under canopy and long-range surfaces stay thin. The gap-fill layer closes holes visually but is interpolation, and is
+  scored separately.
+- **Absolute ≤ 1 m without RTK.** Consumer GNSS limits placement to ≈ 2.7 m; the model *shape* is sub-metre either way.
+- **Live uploads.** Offline during judging; a GPU backend for the same pipeline is prepared in [`vf2/cloud`](../vf2/cloud/README.md).
+- **IMU fusion** is not implemented.
 
-1. Freeze the model/checkpoints and run an unseen ten-minute video on specified hardware.
-2. Measure surface error against an independently surveyed reference, using the organizer's alignment and coverage protocol.
-3. Measure completeness over the entire visible scene and report failure cases.
-4. Validate each required export in an independent viewer, including an FBX implementation.
-5. Test reconstruction across supported upload formats and sensor conditions.
+The September prototype's checklist is preserved in [`docs/results.md`](results.md) for provenance.

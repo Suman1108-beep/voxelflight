@@ -38,7 +38,11 @@ def gpu_tsdf(views, voxel=0.05, trunc_mult=6.0, depth_max=60.0, block_res=8, blo
         vbg = vbg.cpu()
         mesh = vbg.extract_triangle_mesh(weight_threshold=weight_threshold, estimated_vertex_number=-1)
         pcd = vbg.extract_point_cloud(weight_threshold=weight_threshold)
-    return mesh.to_legacy(), pcd.to_legacy()
+    mesh, pcd = mesh.to_legacy(), pcd.to_legacy()
+    del vbg
+    if "CUDA" in str(dev):
+        o3c.cuda.release_cache()   # free this tile's grid before the next tile allocates its own
+    return mesh, pcd
 
 
 def _world_xy(v, step=4):

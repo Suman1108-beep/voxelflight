@@ -1,0 +1,43 @@
+--- a/vf2/common.py
++++ b/vf2/common.py
+@@ -6,7 +6,7 @@
+ 
+ import numpy as np
+ 
+-ROOT = "/workspace/voxelflight_a100_20260928"
++ROOT = os.environ.get("VF_ROOT", "/workspace/voxelflight_a100_20260928")   # VF_ROOT: vf2/cloud/modal_app.py
+ 
+ 
+ def umeyama(src, dst, w=None):
+--- a/vf2/run_pipeline.py
++++ b/vf2/run_pipeline.py
+@@ -17,7 +17,7 @@
+ from ingest_video import ensure_calibration, ensure_decodable
+ from telemetry import GeoFrame
+ 
+-ROOT = "/workspace/voxelflight_a100_20260928"
++ROOT = os.environ.get("VF_ROOT", "/workspace/voxelflight_a100_20260928")   # VF_ROOT: vf2/cloud/modal_app.py
+ PY = ROOT + "/.venv/bin/python"
+ DPVO_PY = ROOT + "/thirdparty/dpvo-env/bin/python"
+ DPVO_DIR = ROOT + "/thirdparty/DPVO"
+@@ -52,7 +52,8 @@
+     a.telemetry = ensure_pipeline_telemetry(a.telemetry, a.video, a.output)  # SRT / GPX / other CSV -> per-frame CSV
+     a.calibration = ensure_calibration(a.calibration, a.video, a.output)  # estimated intrinsics when none are supplied
+     env = dict(os.environ, HF_HOME=ROOT + "/cache/huggingface", TORCH_HOME=ROOT + "/cache/torch", DINO_SOURCE=ROOT + "/dinov2",
+-               HF_HUB_OFFLINE="1", OMP_NUM_THREADS="8", PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True", LD_LIBRARY_PATH=LDP)
++               HF_HUB_OFFLINE="1", OMP_NUM_THREADS="8", PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True",
++               LD_LIBRARY_PATH=os.pathsep.join(p for p in (LDP, os.environ.get("LD_LIBRARY_PATH")) if p))  # keep the CUDA driver path
+     cam = json.load(open(a.calibration)) if a.calibration else None
+     run_name = os.path.basename(os.path.normpath(a.output))
+ 
+--- a/vf2/ingest_video.py
++++ b/vf2/ingest_video.py
+@@ -4,7 +4,7 @@
+ import json, os, shutil, subprocess, sys
+ import cv2, numpy as np
+ 
+-ROOT = "/workspace/voxelflight_a100_20260928"
++ROOT = os.environ.get("VF_ROOT", "/workspace/voxelflight_a100_20260928")   # VF_ROOT: vf2/cloud/modal_app.py
+ 
+ 
+ def _ffmpeg():

@@ -12,7 +12,8 @@ cands = [f["properties"]["name"] for f in res["features"] if shape(f["geometry"]
 print("covering EPT resources:", cands)
 import laspy, pyproj
 best = None
-for name in sorted(cands, reverse=True):
+import re
+for name in sorted(cands, key=lambda n: max(map(int, re.findall(r"(?:19|20)\d\d", n)), default=0), reverse=True):   # newest survey first
     try:
         ept = json.load(urllib.request.urlopen(f"{BASE}/{name}/ept.json", timeout=30)); best = name; break
     except Exception as e:

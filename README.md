@@ -6,7 +6,19 @@ Single-pass drone video reconstruction with an inspectable 3D workspace.
 
 ![Actual reconstructed surface in the VoxelFlight viewer](assets/screenshots/03-reconstructed-surface.png)
 
-*Actual source-textured reconstruction. Coverage is partial and surface accuracy remains unverified.*
+*Photo-textured maximum-coverage model of the 10-minute Zurich flight in the live viewer.*
+
+## Results at a glance (4 October 2026, VoxelFlight v2 on one A100)
+
+| SIH26158 target | Measured result (independent references, never pipeline inputs) |
+|---|---|
+| < 15 min for a 10-min video | **7 min 8 s** fast mode; **14 min 28 s** high-quality mode (Depth Anything 3), each one continuous run to all six formats |
+| ≤ 1 m spatial accuracy | Model shape **0.59 m** median (15-min high-quality model) vs swisstopo LiDAR; **0.5 m horizontal / 0.41 m vertical absolute with RTK**; ≈ 2.7 m with consumer GNSS |
+| Entire visible scene | **46.5 %** of visible survey points within 1 m on the maximum-coverage model, **51.2 %** with the interpolated ground-level gap-fill layer (scored separately) |
+| OBJ, PLY, LAS, GeoTIFF, GLB, FBX | All six from every run, reopened by independent readers; plus a photo-textured mesh |
+| Input | 1080p and real DJI 4K (H.264 + `.SRT`, HEVC + flight log), estimated intrinsics when no calibration is given |
+
+Full tables: [`docs/requirements.md`](docs/requirements.md) and [`vf2/RESULTS.md`](vf2/RESULTS.md). Pipeline: [`vf2/README.md`](vf2/README.md).
 
 ## 1. Project information
 
@@ -34,11 +46,11 @@ The public website opens on a login page. Google sign-in supports account-specif
 
 ## 4. Key features
 
-- Real 60-second camera video and synchronized sampled-frame navigation.
-- On-demand Three.js mesh viewer with camera presets, layers and measurement tools.
-- Actual camera-image textures on the latest saved reconstruction.
+- The real 10-minute flight video (4× time-lapse) synchronized with 719 reconstructed views.
+- Three.js viewer with camera presets, layers (measured surface, optional interpolated gap fill, flight path) and measurement.
+- Photo-textured mesh baked from the source frames; full-resolution coloured mesh and point cloud for download.
 - Model/evidence downloads with local and provisional UTM coordinate descriptions.
-- Video/image-sequence ingestion and supported GPS/calibration parsers.
+- Video ingestion (H.264/HEVC, 1080p/4K) and DJI SRT, flight-record, GPX and CSV telemetry.
 - Firebase Google sign-in and current-user profile display.
 - Authenticated FastAPI jobs, owner-restricted artifacts, bounded queue and cancellation.
 - Explicit separation of input imagery, reconstructed geometry and optional appearance renders.
@@ -52,8 +64,9 @@ A ruler uses the model's estimated scale; it does not certify measured dimension
 | Frontend | JavaScript, HTML/CSS, Three.js, Vite |
 | Hosting and identity | Firebase Hosting and Firebase Authentication |
 | Backend | Python, FastAPI, token verification, filesystem job records |
-| Default preview model | Pretrained MapAnything on Apple MPS |
-| Latest saved experiment | Calibrated COLMAP anchors, MapAnything, multiview-supported TSDF, source-image texture |
+| v2 reconstruction (A100) | DPVO, SuperPoint + LightGlue + COLMAP, Depth Anything 3 / MapAnything, Open3D CUDA TSDF, xatlas texture; optional PGSR |
+| Default preview model (September) | Pretrained MapAnything on Apple MPS |
+| September saved experiment | Calibrated COLMAP anchors, MapAnything, multiview-supported TSDF, source-image texture |
 | Earlier GPU experiment | MASt3R-SLAM, MapAnything, SegFormer, telemetry fusion, optional gsplat |
 | Geometry / GIS | Open3D, trimesh, PyCOLMAP, pyproj, laspy, rasterio |
 
@@ -127,7 +140,7 @@ pnpm test
 pnpm run build:firebase
 ```
 
-The asset restore downloads approximately 142 MB of public demo files with SHA-256 verification. Model weights, original dataset archives and private uploads are excluded. See [setup.md](docs/setup.md) for Python/model dependencies and platform requirements.
+The asset restore downloads approximately 122 MB of public demo files with SHA-256 verification. Model weights, original dataset archives and private uploads are excluded. See [setup.md](docs/setup.md) for Python/model dependencies and platform requirements.
 
 ## 12. Run
 
@@ -138,9 +151,9 @@ pnpm dlx firebase-tools emulators:start --only hosting --project voxelflight-3d
 
 Open `http://127.0.0.1:8140/` for the guest demo. Production sign-in needs a configured Firebase project. See [setup.md](docs/setup.md) to run the separate reconstruction API, use your own project or deploy the frontend.
 
-### Recorded evidence
+### Recorded evidence (September prototype, archived; current results are at the top)
 
-| Latest saved experiment | Result |
+| September saved experiment | Result |
 |---|---:|
 | Selected views | 90 |
 | Mesh triangles | 646,019 |
@@ -152,12 +165,10 @@ Reference poses enter evaluation only. The aligned camera-path score removes glo
 
 ## 13. Future scope
 
-- Independent surface-accuracy and visible-coverage validation on unseen flights.
-- A fixed-hardware ten-minute-video speed benchmark.
-- Integrating the improved SfM/TSDF quality path into the default upload worker.
-- More robust sensor synchronization, motion/blur handling and occlusion reporting.
-- Verified FBX export and stable production inference infrastructure.
-- Pinning every remaining upstream architecture dependency for reproducibility.
+- Sub-metre absolute placement without RTK (ground control or map-based registration).
+- Coverage beyond the measured 46.5 %: more viewpoints per pass, longer-range depth, better facade recovery.
+- Sub-metre geometry for high-altitude 4K footage, which fast mode does not yet reach (≈ 1.7–1.8 m).
+- Live uploads on the prepared GPU backend (`vf2/cloud`), and IMU fusion.
 
 ## Team and submission
 
@@ -169,17 +180,17 @@ Reference poses enter evaluation only. The aligned camera-path score removes glo
 
 No credentials, private user jobs, model caches or private Git history are included.
 
-## VoxelFlight v2 (3 October 2026): A100 pipeline and measured results
+## VoxelFlight v2 (3–4 October 2026): A100 pipeline and measured results
 
 The `vf2/` folder holds the A100 pipeline built after the September submission (`vf2/README.md` explains how to run it).
 Every number below is measured against reference data the pipeline never reads (`vf2/RESULTS.md` has the full protocol):
 
 | Target | Result |
 |---|---|
-| < 15 min for a 10-min video | **7 min 8 s** end to end on one A100 (video → OBJ, PLY, LAS, GeoTIFF DSM, GLB, FBX) |
-| Spatial accuracy, model geometry | 0.55 m (held-out), 0.85 m (aerial), 0.63–0.91 m (10 min, depending on mode) median vs national airborne LiDAR |
-| Spatial accuracy, absolute | 0.5 m horizontal / 0.41 m vertical with RTK input; ≈ 3.5 m with consumer GNSS |
-| Visible-scene coverage | 41–59 % of visible survey points within 1 m in maximum-coverage mode (24 % in fast mode; roads up to 78 %); unseen surfaces left empty |
+| < 15 min for a 10-min video | **7 min 8 s** fast, **14 min 28 s** high quality, end to end on one A100 (video → OBJ, PLY, LAS, GeoTIFF DSM, GLB, FBX) |
+| Spatial accuracy, model geometry | 0.55 m (held-out), 0.85 m (aerial), 0.59–0.91 m (10 min, depending on mode) median vs national airborne LiDAR |
+| Spatial accuracy, absolute | 0.5 m horizontal / 0.41 m vertical with RTK input; ≈ 2.7–3.5 m with consumer GNSS |
+| Visible-scene coverage | 46.5 % of visible survey points within 1 m in maximum-coverage mode, 51.2 % with the gap-fill layer (24 % fast, 37.9 % high quality); 59 % on the Toledo aerial survey |
 
-The public demo at <https://voxelflight-3d.web.app/workspace> shows the 10-minute run in maximum-coverage mode. Uploading a new video is not
-connected to the A100: the hosted processing service is offline.
+The public demo at <https://voxelflight-3d.web.app/workspace> shows the 10-minute run in maximum-coverage mode. Live uploads are offline during
+judging; a GPU upload backend for the same pipeline is prepared in [`vf2/cloud`](vf2/cloud/README.md).

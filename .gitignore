@@ -18,3 +18,4 @@ viewer/vendor/
 viewer/dist*/
 viewer/.firebase/
 viewer/firebase/config.local.json
+!vf2/tests/data/

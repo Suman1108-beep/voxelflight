@@ -2,7 +2,28 @@
 
 VoxelFlight has a public inspection website and a separate reconstruction service. Firebase serves the website and authenticates users. It does not execute the reconstruction model.
 
-## Data flow
+## Current reconstruction pipeline (v2, A100)
+
+```text
+video (MP4/MOV, H.264 or HEVC) + telemetry (DJI SRT / flight record / GPX / CSV) [+ calibration, else estimated]
+  |
+  +-- fast mode ------ DPVO visual odometry  ||  MapAnything metric depth (360 keyframes)
+  |                    -> GNSS + barometer + VO fusion -> per-view snapping
+  |
+  +-- quality modes -- SuperPoint + LightGlue + COLMAP camera solve  ||  depth (MapAnything or Depth Anything 3,
+  |                    full frames or 2x2 crops) -> SfM locked to GNSS/barometer -> every view scaled to tie points
+  |
+  +--> tiled GPU TSDF (Open3D CUDA, 60 m tiles) -> mesh + points
+        -> OBJ, PLY, GLB, FBX, LAS (UTM), GeoTIFF DSM (UTM), metadata with hashes
+        -> optional: photo-textured mesh (xatlas + baked frames), tinted gap-fill layer, PGSR Gaussian surface
+        -> website package (make_web_demo.py) -> Firebase Hosting
+```
+
+Evaluation scripts (`vf2/evaluate_*.py`) read the national LiDAR and reference poses only after a run is frozen. Live
+uploads are offline during judging; [`vf2/cloud`](../vf2/cloud/README.md) holds a prepared Modal GPU backend that serves
+the same job API as the September service. The sections below describe the September prototype and are kept for provenance.
+
+## Data flow (September prototype)
 
 ```text
 Reviewer or operator

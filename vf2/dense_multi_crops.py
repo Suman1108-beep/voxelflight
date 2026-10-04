@@ -1,5 +1,6 @@
 """Tiled variant of dense_multi_sfm.py: every depth view is a crop of a keyframe; crops use the parent frame's camera
-(solved or interpolated) with intrinsics shifted to the crop.
+(solved or interpolated) with intrinsics shifted to the crop. Several prediction sets can be fused into one volume
+(--predictions A B --crops cropsA none: "none" = full keyframes), e.g. Depth Anything 3 and MapAnything together.
 Original description: dense step for consumer-GNSS flights solved by visual SfM that may split into several models.
 Each SfM model is locked to GNSS/barometer independently with a robust similarity; every neural depth view is then
 placed with its solved camera and scaled to the tie points it observes; tiled GPU TSDF; exports."""
@@ -12,9 +13,11 @@ from telemetry import GeoFrame
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--sparse", required=True, help="folder containing SfM models 0/, 1/, ...")
-ap.add_argument("--telemetry", required=True); ap.add_argument("--predictions", required=True); ap.add_argument("--output", required=True)
+ap.add_argument("--telemetry", required=True); ap.add_argument("--predictions", required=True, nargs="+"); ap.add_argument("--output", required=True)
 ap.add_argument("--voxel", type=float, default=0.05); ap.add_argument("--depth-max", type=float, default=25.0)
-ap.add_argument("--crops", required=True); ap.add_argument("--exchange-voxel", type=float, default=0.1); ap.add_argument("--min-model-images", type=int, default=20)
+ap.add_argument("--crops", required=True, nargs="+", help="crops folder per prediction set, or none for full keyframes")
+ap.add_argument("--conf-drop", type=float, help="recompute masks: drop this lowest-confidence percent (sets that saved conf)")
+ap.add_argument("--exchange-voxel", type=float, default=0.1); ap.add_argument("--min-model-images", type=int, default=20)
 a = ap.parse_args(); os.makedirs(a.output, exist_ok=True); T = Timer()
 tel = load_telemetry(a.telemetry); geo = GeoFrame(tel["lat"], tel["lon"], tel["alt"]); gl = geo.to_local(tel["lat"], tel["lon"], tel["alt"])
 if tel.get("baro") is not None and np.isfinite(tel["baro"]).all():
@@ -72,35 +75,43 @@ for d in sorted(glob.glob(os.path.join(a.sparse, "*"))):
         by_model[d] = sorted(int(im.name.split("_")[1].split(".")[0]) for im in r.images.values() if im.has_pose)
 
 with T.stage("place neural views"):
-    rep = json.load(open(os.path.join(a.predictions, "report.json")))
-    files = sorted(glob.glob(os.path.join(a.predictions, "predictions", "frame_*.npz")))
     views, c2ws, vframes, scales = [], [], [], []; n_interp = 0
-    crops = json.load(open(os.path.join(a.crops, "crops.json")))
-    for fpath, fr in zip(files, rep["frames"]):
-        m = crops.get(fr.get("source_name"))
-        if m is None:
-            continue
-        sf = m["source_frame"]; item = placed.get(m["parent"])
-        if item is None:
-            item = interpolated(sf)
+    for pred_dir, crop_dir in zip(a.predictions, a.crops):
+        rep = json.load(open(os.path.join(pred_dir, "report.json")))
+        files = sorted(glob.glob(os.path.join(pred_dir, "predictions", "frame_*.npz")))
+        crops = json.load(open(os.path.join(crop_dir, "crops.json"))) if crop_dir != "none" else None
+        for fpath, fr in zip(files, rep["frames"]):
+            if crops is not None:
+                m = crops.get(fr.get("source_name"))
+                if m is None:
+                    continue
+            else:
+                m = {"parent": f"f_{fr['source_frame']:05d}.jpg", "source_frame": fr["source_frame"], "ox": 0, "oy": 0}
+            sf = m["source_frame"]; item = placed.get(m["parent"])
             if item is None:
+                item = interpolated(sf)
+                if item is None:
+                    continue
+                n_interp += 1
+            cw, pts, cam = item
+            if crops is None: m.update({"w": cam.width, "h": cam.height, "W": cam.width, "H": cam.height})
+            p = np.load(fpath); mask = p["mask"]
+            if a.conf_drop is not None and "conf" in p.files:
+                mask = (p["depth"] > 0) & np.isfinite(p["depth"]) & (p["conf"] >= np.percentile(p["conf"], a.conf_drop))
+            d0 = np.where(mask, p["depth"], 0).astype(np.float32); h, w = d0.shape
+            K = cam.calibration_matrix().copy(); K[0, :] *= m["W"] / cam.width; K[1, :] *= m["H"] / cam.height
+            K[0, 2] -= m["ox"]; K[1, 2] -= m["oy"]; K[0, :] *= w / m["w"]; K[1, :] *= h / m["h"]
+            if len(pts) < 20:
                 continue
-            n_interp += 1
-        cw, pts, cam = item
-        p = np.load(fpath); d0 = np.where(p["mask"], p["depth"], 0).astype(np.float32); h, w = d0.shape
-        K = cam.calibration_matrix().copy(); K[0, :] *= m["W"] / cam.width; K[1, :] *= m["H"] / cam.height
-        K[0, 2] -= m["ox"]; K[1, 2] -= m["oy"]; K[0, :] *= w / m["w"]; K[1, :] *= h / m["h"]
-        if len(pts) < 20:
-            continue
-        X = pts @ cw[:3, :3].T + cw[:3, 3]; z = X[:, 2]
-        u = (K[0, 0] * X[:, 0] / z + K[0, 2]).astype(int); v = (K[1, 1] * X[:, 1] / z + K[1, 2]).astype(int)
-        ok = (z > 0) & (u >= 0) & (u < w) & (v >= 0) & (v < h)
-        dn = d0[v[ok], u[ok]]; good = dn > 0
-        if good.sum() < 15:
-            continue
-        sc = float(np.median(z[ok][good] / dn[good])); scales.append(sc)
-        c2w = np.linalg.inv(cw); c2ws.append(c2w); vframes.append(sf)
-        views.append({"depth": d0 * sc, "color": p["color"], "K": K, "c2w": c2w})
+            X = pts @ cw[:3, :3].T + cw[:3, 3]; z = X[:, 2]
+            u = (K[0, 0] * X[:, 0] / z + K[0, 2]).astype(int); v = (K[1, 1] * X[:, 1] / z + K[1, 2]).astype(int)
+            ok = (z > 0) & (u >= 0) & (u < w) & (v >= 0) & (v < h)
+            dn = d0[v[ok], u[ok]]; good = dn > 0
+            if good.sum() < 15:
+                continue
+            sc = float(np.median(z[ok][good] / dn[good])); scales.append(sc)
+            c2w = np.linalg.inv(cw); c2ws.append(c2w); vframes.append(sf)
+            views.append({"depth": d0 * sc, "color": p["color"], "K": K, "c2w": c2w})
     print("interpolated cameras", n_interp)
     print("views", len(views), "scale median %.3f p5 %.3f p95 %.3f" % (np.median(scales), *np.percentile(scales, [5, 95])))
 
@@ -116,6 +127,6 @@ with T.stage("exports"):
     export_all(a.output + "/model", light, P[::4], Cc[::4], geo.origin, geo.epsg, extra_meta=meta, formats=("obj", "glb", "fbx"))
 np.savez(a.output + "/keyframe_poses.npz", camera_to_world=np.array(c2ws), video_frame=np.array(vframes), utm_origin=geo.origin, epsg=geo.epsg)
 dump(a.output + "/report.json", {"schema": "voxelflight.v2.sfm-gnss-tiled", "stage_seconds": T.stages, "models": locks, "views": len(views), "interpolated_views": n_interp,
-     "mesh": mesh_stats(mesh), "utm_epsg": geo.epsg, "utm_origin": geo.origin.tolist(), "inference_dir": a.predictions,
+     "mesh": mesh_stats(mesh), "utm_epsg": geo.epsg, "utm_origin": geo.origin.tolist(), "inference_dir": a.predictions, "conf_drop": a.conf_drop,
      "ground_truth_used": False, "survey_or_lidar_used": False})
 print("done", T.total())

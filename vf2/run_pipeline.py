@@ -4,6 +4,7 @@ Input contract
   --video        MP4/MOV from one UAV pass
   --telemetry    CSV, one row per video frame: source_frame,timestamp_s,latitude,longitude,altitude_m
                  optional columns: gps_eph_m (horizontal accuracy), baro_alt_m (barometric altitude)
+                 (a DJI .SRT, GPX, flight-log CSV or JSON is converted first by ingest_telemetry.py -> <output>/telemetry_v2.csv)
   --calibration  JSON {intrinsic_matrix, distortion_coefficients, width, height} (optional camera intrinsics)
 No survey, reference-pose or LiDAR data are read. Stage wall times are recorded from video-on-disk to final exports.
 """
@@ -12,6 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 
 from common import Timer, dump
+from ingest_telemetry import ensure_pipeline_telemetry
+from ingest_video import ensure_calibration, ensure_decodable
 from telemetry import GeoFrame
 
 ROOT = "/workspace/voxelflight_a100_20260928"
@@ -45,6 +48,9 @@ def main():
     a = ap.parse_args()
     os.makedirs(a.output, exist_ok=True)
     T = Timer()
+    a.video = ensure_decodable(a.video, a.output)  # HEVC etc. -> H.264 when OpenCV cannot read it
+    a.telemetry = ensure_pipeline_telemetry(a.telemetry, a.video, a.output)  # SRT / GPX / other CSV -> per-frame CSV
+    a.calibration = ensure_calibration(a.calibration, a.video, a.output)  # estimated intrinsics when none are supplied
     env = dict(os.environ, HF_HOME=ROOT + "/cache/huggingface", TORCH_HOME=ROOT + "/cache/torch", DINO_SOURCE=ROOT + "/dinov2",
                HF_HUB_OFFLINE="1", OMP_NUM_THREADS="8", PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True", LD_LIBRARY_PATH=LDP)
     cam = json.load(open(a.calibration)) if a.calibration else None

@@ -40,6 +40,9 @@ export class SceneViewer {
     this.onStatus('Loading saved mesh…');
     const gltf=await new GLTFLoader().setRequestHeader(await getHeaders()).loadAsync(`${base}reconstruction_mesh.glb`);
     this.replaceRoot(gltf.scene,false);
+    this.hasFill=false;
+    try{const fill=await new GLTFLoader().setRequestHeader(await getHeaders()).loadAsync(`${base}fill_mesh.glb`);   // optional interpolated layer
+      fill.scene.traverse(c=>{if(c.isMesh)c.userData.fill=true;});this.object.add(fill.scene);this.hasFill=true;}catch{}
     this.styleMesh();this.fit('overview');
     this.onStatus('Saved reconstruction ready');
   }
@@ -111,7 +114,8 @@ export class SceneViewer {
     this.onStatus('Saved reconstruction ready');this.render();
   }
   setLayer(layer,visible){
-    if(layer==='mesh')this.object?.traverse(c=>{if(c.isMesh)c.visible=visible;});
+    if(layer==='mesh')this.object?.traverse(c=>{if(c.isMesh&&!c.userData.fill)c.visible=visible;});
+    if(layer==='fill')this.object?.traverse(c=>{if(c.isMesh&&c.userData.fill)c.visible=visible;});
     if(layer==='path')this.pathGroup.visible=visible&&!this.isImported;
     if(layer==='grid')this.grid.visible=visible;
     if(layer==='wire')this.object?.traverse(c=>{if(c.isMesh)c.material.wireframe=visible;});

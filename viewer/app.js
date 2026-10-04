@@ -46,7 +46,7 @@ function setMode(value){
   $('#geometry-settings').hidden=mode!=='geometry';$('#appearance-settings').hidden=mode!=='appearance';
   document.body.dataset.mode=mode;
   $('#stage-mode').textContent=mode==='video'?'Watch the flight':mode==='geometry'?'Explore the reconstruction':'Earlier appearance experiment';
-  $('#result-explanation').textContent=imported?'Your local model. Scale, coverage and accuracy have not been verified.':mode==='video'?'The real 10-minute flight (4× time-lapse preview), encoded from the official camera images. Next, explore the 3D surface reconstructed from this sequence.':mode==='geometry'?'Maximum-coverage surface from 720 frames (4 crops each) of a 10-minute flight. Unseen regions remain open; shape is about 0.7 m median against survey LiDAR.':'Archived Gaussian-render comparison from the earlier 180-view run. These image scores do not describe the latest 3D mesh.';
+  $('#result-explanation').textContent=imported?'Your local model. Scale, coverage and accuracy have not been verified.':mode==='video'?'The real 10-minute flight (4× time-lapse preview), encoded from the official camera images. Next, explore the 3D surface reconstructed from this sequence.':mode==='geometry'?'Photo-textured maximum-coverage surface from 720 frames (4 crops each, Depth Anything 3) of a 10-minute flight. The flat grey road surface is interpolated gap fill (switch it off under Layers); shape is about 0.7 m median against survey LiDAR.':'Archived Gaussian-render comparison from the earlier 180-view run. These image scores do not describe the latest 3D mesh.';
   $('#scout-hint').innerHTML=mode==='video'?'Play the real flight.<br>Then explore in 3D.':mode==='geometry'?'Drag to orbit.<br>Scroll to explore.':'Slide to compare.<br>Earlier experiment.';
   $('#reset-view').disabled=mode!=='geometry'||!ready;
   if(mode==='geometry'){viewer?.resize();if(run&&!ready)ensureViewer();}else if(mode==='appearance')selectWindow(windowIndex);
@@ -80,7 +80,7 @@ function openFrame(){if(!run||imported)return;const frame=run.scene.thumbnail_fr
 $('#open-frame').addEventListener('click',openFrame);$('#source-preview-button').addEventListener('click',openFrame);
 all('button[data-view]').forEach(b=>b.addEventListener('click',()=>{if(!ready)return;all('button[data-view]').forEach(p=>p.classList.toggle('active',p===b));viewer.fit(b.dataset.view);}));
 $('#reset-view').addEventListener('click',()=>{if(ready){viewer.fit('overview');all('button[data-view]').forEach(p=>p.classList.toggle('active',p.dataset.view==='overview'));}});
-for(const name of ['mesh','path','grid','wire'])$(`#${name}-toggle`).addEventListener('change',e=>viewer?.setLayer(name,e.target.checked));
+for(const name of ['mesh','fill','path','grid','wire'])$(`#${name}-toggle`).addEventListener('change',e=>viewer?.setLayer(name,e.target.checked));
 $('#cloud-toggle').addEventListener('change',async e=>{const el=e.target;if(!ready){el.checked=false;return;}el.disabled=true;try{await viewer.toggleCloud(el.checked);viewer.setPointSize($('#point-size').value);}catch(error){el.checked=false;toast('Point cloud could not be opened: '+error.message);}finally{el.disabled=false;}});
 $('#point-size').addEventListener('input',e=>{$('#point-size-value').value=e.target.value;viewer?.setPointSize(e.target.value);});
 function measurement(value){
@@ -131,7 +131,8 @@ async function ensureViewer(){
     viewer=new SceneViewer($('#scene'),{onStatus:message=>{status(message);$('#loading-detail').textContent=message;},onPick:measurement,onHover:p=>{$('#coordinates').textContent=`X ${p[0].toFixed(2)} · Y ${p[1].toFixed(2)} · Z ${p[2].toFixed(2)} ${imported?'units':'m'}`;}});
     await viewer.loadReconstruction('assets/latest/');viewer.setTrajectory(run.trajectory);viewer.fit('facade');ready=true;$('#loading').hidden=true;
     all('button[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view==='facade'));
-    for(const name of ['mesh','path','grid','wire'])viewer.setLayer(name,$(`#${name}-toggle`).checked);
+    $('#fill-row').hidden=!viewer.hasFill;
+    for(const name of ['mesh','fill','path','grid','wire'])viewer.setLayer(name,$(`#${name}-toggle`).checked);
     viewer.setFrame(run.scene.thumbnail_frames[frameIndex]);$('#reset-view').disabled=mode!=='geometry';return true;
   }catch(error){$('#loading').innerHTML='<strong>3D view unavailable</strong><span>Use Compare images to inspect saved renders, or Download for the original models.</span>';status('3D view unavailable on this device. Saved images and downloads remain available.');console.error('3D initialization failed',error);return false;}})();
   return viewerPromise;

@@ -1,6 +1,11 @@
-# Recorded results and evidence
+# Recorded results and evidence: September prototype (archived)
 
-## Current public saved reconstruction
+> **Archived.** This page records the 10 September Mac/MPS prototype and is kept unchanged for provenance. The current
+> pipeline, its measured results (10-minute video in 7 min 8 s / 14 min 12 s, sub-metre model shape against survey
+> LiDAR, 0.5 m absolute with RTK, all six export formats) and the model on the website are in
+> [`vf2/RESULTS.md`](../vf2/RESULTS.md) and [`docs/requirements.md`](requirements.md).
+
+## September public saved reconstruction
 
 Source: Zurich Urban MAV images 61201-63000, a continuous 60-second camera sequence. The latest experiment selects 90 views, predicts 4,208,069 points and exports a 646,019-triangle source-textured mesh. Construction does not use ground-truth camera poses.
 
