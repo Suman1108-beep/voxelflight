@@ -5,7 +5,7 @@ const read=file=>readFile(new URL('../'+file,import.meta.url),'utf8');
 
 test('entrance prioritizes sign-in and retains a separate public guest demo',async()=>{
   const html=await read('login.html');
-  assert.match(html,/class="guest-button launch-demo" href="\/workspace"/);
+  assert.match(html,/class="guest-button launch-demo" href="\/"/);
   assert.ok(html.indexOf('launch-demo')>html.indexOf('provider-buttons'));
   assert.match(html,/Decorative illustration, not a reconstruction/);
   assert.match(html,/Other sign-in providers/);

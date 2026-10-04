@@ -39,9 +39,9 @@ function renderUser(user){
   if(page==='signed-out'){
     if(profile&&!busy){logout();return;}   // arriving here signed in means "sign me out": finish it without another click
     $('#logout-loading').hidden=true;$('#finish-signout').hidden=!profile;
-    $('#logout-state').textContent=profile?'Session active':'Signed out';
-    $('#logout-title').textContent=profile?'Signing out':'You are signed out';
-    $('#logout-message').textContent=profile?'Ending your session on this device.':'Your session on this device has ended. The sample project remains available.';
+    $('#logout-state').textContent=profile?'SIGNING YOU OUT':'SESSION CLOSED';
+    $('#logout-title').textContent=profile?'One moment.':'See you next flight.';
+    $('#logout-message').textContent=profile?'Ending your session on this device…':'You’re signed out of VoxelFlight. Saved public reconstructions are still available.';
   }
 }
 function providerFor(id){
@@ -63,7 +63,7 @@ async function signin(id,redirect=false){
 }
 async function logout(){
   if(!auth||busy)return;
-  setBusy(true);message('');showTransition('Signing out','Ending your session…');
+  setBusy(true);message('');showTransition('Until the next flight','Signing you out of VoxelFlight…');
   try{await signOut(auth);location.replace('/logout');}
   catch(error){hideTransition();message(authMessage(error));setBusy(false);}
 }

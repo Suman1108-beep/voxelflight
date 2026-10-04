@@ -36,7 +36,7 @@ export async function prepareFirebase(root,dist){
       html=html.replace('Reconstruction files stay on the processing workstation; signing in does not upload videos or start a reconstruction.','Reconstruction files are stored by the operator-managed processing service and restricted to your account. Signing in does not upload videos or start a reconstruction.');
     }
     if(source==='account.html'){
-      html=html.replace('WELCOME TO YOUR STUDIO','Account');
+      html=html.replace('WELCOME TO YOUR STUDIO','YOUR VOXELFLIGHT ACCOUNT');
       html=html.replace('<h1 id="account-name">Your account</h1>','<h1 id="account-name">Welcome.</h1>');
       html=html.replace('New video processing runs on the configured workstation. Local runs are not synced to this account.','Your submitted reconstructions are private to your account. Open the processing workspace to create a run or revisit your results.');
       html=html.replace('id="account-error" role="alert"></p>','id="account-error" role="alert"></p><a class="account-recovery" href="/login">Back to sign-in</a>');
