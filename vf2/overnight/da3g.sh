@@ -1,0 +1,8 @@
+set -x
+export PYTHONPATH=/workspace/voxelflight_a100_20260928/thirdparty/Depth-Anything-3/src:/workspace/voxelflight_a100_20260928/pydeps-da3 HF_HOME=/workspace/voxelflight_a100_20260928/cache/huggingface TORCH_HOME=/workspace/voxelflight_a100_20260928/cache/torch LD_LIBRARY_PATH=/workspace/voxelflight_a100_20260928/runtime-packages/root/usr/lib/x86_64-linux-gnu OMP_NUM_THREADS=8 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True VF_WEIGHT=1
+cd /workspace/voxelflight_a100_20260928/vf2
+OUT=/workspace/voxelflight_a100_20260928/vf2/runs/q720-da3g; mkdir -p $OUT
+/workspace/voxelflight_a100_20260928/.venv/bin/python -u da3_infer.py --video /workspace/voxelflight_a100_20260928/runs/zurich-10min-input/flight.mp4 --keyframes /workspace/voxelflight_a100_20260928/vf2/runs/quality720-timed/keyframes.json --calibration /workspace/voxelflight_a100_20260928/runs/zurich-10min-input/camera.json --output $OUT/inference --res 504 --window 32 || exit 1
+/workspace/voxelflight_a100_20260928/.venv/bin/python -u dense_multi_sfm.py --sparse /workspace/voxelflight_a100_20260928/vf2/runs/quality720-timed/sfm/sparse --telemetry /workspace/voxelflight_a100_20260928/runs/zurich-10min-input/telemetry_v2.csv --predictions $OUT/inference --output $OUT --depth-max 35 > $OUT/dense.log 2>&1 || { tail -20 $OUT/dense.log; exit 1; }
+/workspace/voxelflight_a100_20260928/.venv/bin/python -u evaluate_run.py $OUT /workspace/voxelflight_a100_20260928/datasets/zurich-40001-58000 40001 /workspace/voxelflight_a100_20260928/vf2/runs/lidar_ref_2018_egm96.npz /workspace/voxelflight_a100_20260928/runs/zurich-10min-input/camera.json > $OUT/eval.txt 2>&1
+echo DA3G_DONE
