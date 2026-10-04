@@ -44,3 +44,10 @@ test('the explorer syncs exact camera poses with the video and colours the model
  const js=await read('explore.js');assert.match(js,/slerp/);assert.match(js,/errors\.bin/);assert.match(js,/evaluation-only alignment/);
  assert.match(await read('explore.html'),/Compare with real frame/);
 });
+test('the studio is the signed-in home: checks inputs locally, submits to the job API, opens local models',async()=>{
+ const html=await read('studio.html'),js=await read('studio.js');
+ assert.match(html,/data-page="studio"/);assert.match(html,/id="video"[^>]*type="file"/);assert.match(html,/id="telemetry"[^>]*\.srt/);
+ assert.match(js,/api\('jobs',\{method:'POST'/);assert.match(js,/sessionHeaders/);assert.match(js,/importFile/);
+ assert.match(await read('firebase/build.mjs'),/\['studio.html','studio.html'\]/);
+ assert.match(await read('firebase.json'),/"source": "\/workspace", "destination": "\/studio"/);
+});

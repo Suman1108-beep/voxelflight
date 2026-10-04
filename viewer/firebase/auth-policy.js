@@ -7,7 +7,7 @@ export function displayProfile(user){
 }
 export function safeReturnTo(value,origin){
   if(typeof value!=='string'||!value.startsWith('/')||value.startsWith('//')||/[\\\u0000-\u001f]/.test(value))return '/account';
-  try{const url=new URL(value,origin);if(url.origin!==origin||!['/account','/workspace','/engine','/engine.html'].includes(url.pathname))return '/account';return url.pathname+url.hash;}catch{return '/account';}
+  try{const url=new URL(value,origin);if(url.origin!==origin||!['/account','/workspace','/engine','/engine.html','/studio','/'].includes(url.pathname))return '/account';return url.pathname+url.hash;}catch{return '/account';}
 }
 export function authMessage(error){
   const messages={

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoxelFlight Studio · New reconstruction</title>
+<meta name="description" content="Upload a drone video with its GPS log, check it, and reconstruct a measured 3D model; open your own models in the 3D viewer.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="explore.css">
+<link rel="stylesheet" href="studio-page.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body data-page="studio" class="studio-page">
+<header class="topbar solid">
+  <a class="brand" href="/" aria-label="VoxelFlight home"><img src="favicon.svg" alt="" width="28" height="28"><span>VoxelFlight</span></a>
+  <nav class="links">
+    <a href="/">Explore</a>
+    <a href="/studio" class="current" aria-current="page">Studio</a>
+    <a href="/#evidence">Evidence</a>
+    <a href="/login?return_to=/studio" class="signin" data-account-link>Sign in</a>
+  </nav>
+</header>
+
+<main class="studio">
+  <section class="studio-hero">
+    <div>
+      <p class="kicker">Reconstruction studio</p>
+      <h1 id="greeting">Turn one drone flight into a measured 3D model.</h1>
+      <p class="lede">Add a video and its GPS log. VoxelFlight checks them in your browser before anything is uploaded, then reconstructs on a GPU: about 7 minutes for a 10-minute flight in fast mode.</p>
+    </div>
+    <div id="service" class="service glass" data-state="checking"><i></i><div><b id="service-title">Checking the processing service…</b><small id="service-detail"></small></div></div>
+  </section>
+
+  <div id="signin-banner" class="banner glass" hidden>
+    <div><b>Sign in to submit and keep your reconstructions.</b><small>You can still check files and open models without an account.</small></div>
+    <a class="primary small-btn" href="/login?return_to=/studio">Sign in with Google</a>
+  </div>
+
+  <div class="grid">
+    <section class="card glass new-run" aria-labelledby="new-title">
+      <div class="card-head"><span class="step-dot">1</span><h2 id="new-title">New reconstruction</h2></div>
+      <form id="run-form" novalidate>
+        <label class="drop" id="video-drop">
+          <input id="video" name="video" type="file" accept=".mp4,.mov,video/mp4,video/quicktime" required>
+          <span class="drop-icon">🎬</span>
+          <b>Drop a drone video or click to choose</b>
+          <small>MP4 or MOV · H.264 or HEVC · 1080p or 4K · up to 1 GiB / 30 min</small>
+        </label>
+        <div id="video-check" class="check" hidden></div>
+
+        <label class="drop compact" id="gps-drop">
+          <input id="telemetry" name="telemetry" type="file" accept=".srt,.SRT,.csv,.gpx,.json">
+          <span class="drop-icon">🛰️</span>
+          <b>GPS log</b>
+          <small>DJI .SRT, DJI / AirData flight record (.csv), GPX or JSON · needed for real-world coordinates</small>
+        </label>
+        <div id="gps-check" class="check" hidden></div>
+
+        <details class="optional">
+          <summary>Camera calibration <em>optional · estimated automatically if missing</em></summary>
+          <label class="file-line"><input id="calibration" name="calibration" type="file" accept=".json"><small>JSON with width, height and intrinsic_matrix (3×3), optional distortion_coefficients</small></label>
+        </details>
+
+        <fieldset class="modes-pick">
+          <legend>Mode</legend>
+          <label><input type="radio" name="mode" value="fast" checked><span><b>Fast</b><small>≈ 7 min per 10-min video</small></span></label>
+          <label><input type="radio" name="mode" value="quality"><span><b>High quality</b><small>≈ 14 min · 0.6 m shape</small></span></label>
+          <label><input type="radio" name="mode" value="coverage"><span><b>Maximum coverage</b><small>≈ 37 min · most surface</small></span></label>
+        </fieldset>
+        <button id="submit" class="primary wide" type="submit" disabled>Choose a video to start</button>
+        <p id="form-note" class="note" role="status" aria-live="polite">Nothing is uploaded until the processing service accepts your run.</p>
+      </form>
+      <section id="progress" class="progress" hidden><div class="progress-row"><b id="progress-stage">Queued</b><button id="cancel" class="link-button" type="button">Cancel</button></div><progress id="progress-bar" max="1"></progress><small id="progress-detail"></small></section>
+    </section>
+
+    <div class="side">
+      <section class="card glass" aria-labelledby="runs-title">
+        <div class="card-head"><span class="step-dot">2</span><h2 id="runs-title">Your reconstructions</h2><button id="refresh" class="link-button" type="button">Refresh</button></div>
+        <div id="runs" class="runs">
+          <a class="run demo" href="/">
+            <img src="assets/latest/poster.jpg" alt="Frame from the Zurich demo flight" loading="lazy">
+            <span><b>Zurich street flight · demo</b><small id="demo-meta">10-minute video · photo-textured · measured against survey LiDAR</small></span>
+            <em>Open in 3D →</em>
+          </a>
+        </div>
+      </section>
+
+      <section class="card glass" aria-labelledby="open-title">
+        <div class="card-head"><span class="step-dot">3</span><h2 id="open-title">Open a model</h2></div>
+        <p class="muted small">View any GLB or PLY from your computer in the 3D viewer. The file stays on your device.</p>
+        <label class="drop compact"><input id="model-file" type="file" accept=".glb,.ply"><span class="drop-icon">🧊</span><b>Choose a .glb or .ply</b><small>Up to 5 million points</small></label>
+      </section>
+
+      <section class="card glass" aria-labelledby="account-title">
+        <div class="card-head"><span class="step-dot">4</span><h2 id="account-title">Account</h2></div>
+        <div id="account" class="account"><span class="avatar" id="avatar">?</span><div><b id="account-name">Not signed in</b><small id="account-mail">Sign in with Google to save runs</small></div></div>
+        <div class="account-actions"><a id="account-action" class="ghost small-btn" href="/login?return_to=/studio">Sign in</a><a class="link-button" href="/account">Account page</a></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<dialog id="viewer-dialog" class="viewer-dialog">
+  <div class="viewer-head"><b id="viewer-title">Model</b><small id="viewer-stats"></small><button id="viewer-close" class="close" aria-label="Close viewer">✕</button></div>
+  <div class="viewer-stage"><canvas id="viewer-canvas" aria-label="Your model in 3D"></canvas></div>
+  <div class="viewer-tools"><button data-fit="overview">Overview</button><button data-fit="plan">Top</button><button id="viewer-measure">📏 Measure</button><span id="viewer-note" class="muted small">Drag to orbit · scroll to zoom</span></div>
+</dialog>
+<script type="module" src="studio.js"></script>
+</body>
+</html>

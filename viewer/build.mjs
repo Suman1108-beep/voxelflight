@@ -6,7 +6,7 @@ import {build} from 'vite';
 const root=import.meta.dirname,firebaseTarget=process.argv.includes('--firebase');
 const outputRoot=resolve(root,firebaseTarget?'dist-firebase':'dist'),dist=firebaseTarget?outputRoot:resolve(outputRoot,'client');
 const sources=['index.html','styles.css','fonts.css','favicon.svg','app.js','scene.js','core.js','ui.js','inputs.js','video-input.js','engine.html','engine.css','engine.js','engine-copy.js','login.html','account.html','logout.html','entrance.css','entrance.js','motion.css','pixel.css','pixel.js','navigation.js','studio.css','flight.css'];
-sources.push('session-bridge.js','experience.css','latest-run.js','explore.html','explore.js','explore.css');
+sources.push('session-bridge.js','experience.css','latest-run.js','explore.html','explore.js','explore.css','studio.html','studio.js','studio-page.css');
 for(const file of sources.filter(f=>f.endsWith('.js')))execFileSync(process.execPath,['--check',resolve(root,file)]);
 // Only disposable build output is cleared; source and private Mac results are untouched.
 await rm(outputRoot,{recursive:true,force:true});
@@ -39,6 +39,7 @@ async function moduleGraph(file){
 await moduleGraph('app.js');
 await moduleGraph('engine.js');
 await moduleGraph('explore.js');
+await moduleGraph('studio.js');
 if(firebaseTarget){const {prepareFirebase}=await import('./firebase/build.mjs');await prepareFirebase(root,dist);}
 const html=await readFile(resolve(dist,'workspace.html'),'utf8');
 for(const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)){const value=match[1];if(/^(?:https?:|data:)/.test(value)||['/','/account','/workspace','/engine'].includes(value))continue;await stat(resolve(dist,value.replace(/^\//,'')));}

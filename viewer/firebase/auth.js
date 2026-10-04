@@ -15,8 +15,8 @@ const output=$('#auth-message')||$('#account-error')||$('#logout-error');
 function message(text){if(output)output.textContent=text;}
 function setBusy(value){busy=value;document.querySelectorAll('[data-firebase-provider]').forEach(button=>{button.disabled=value||!ready||!settings?.providers?.includes(button.dataset.firebaseProvider);});const fallback=$('#redirect-signin');if(fallback)fallback.disabled=value||!ready;}
 function renderUser(user){
-  resolveInitial(user);window.dispatchEvent(new CustomEvent('voxelflight:authchange',{detail:{signedIn:!!user}}));
-  const profile=displayProfile(user);
+  resolveInitial(user);const profile=displayProfile(user);
+  window.dispatchEvent(new CustomEvent('voxelflight:authchange',{detail:{signedIn:!!user,profile}}));
   document.querySelectorAll('[data-account-link]').forEach(link=>{
     link.textContent=profile?`Hi, ${profile.name.split(/\s+/)[0]}`:'Sign in';
     link.title=profile?`Welcome, ${profile.name}`:'Sign in to VoxelFlight';
