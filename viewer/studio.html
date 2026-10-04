@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VoxelFlight Studio · New reconstruction</title>
+<title>VoxelFlight · Studio</title>
 <meta name="description" content="Upload a drone video with its GPS log, check it, and reconstruct a measured 3D model; open your own models in the 3D viewer.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="fonts.css">
@@ -12,12 +12,20 @@
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body data-page="studio" class="studio-page">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="1.5"/><path d="M16 10l5-3v10l-5-3"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.6-6-10.5a6 6 0 1 1 12 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12L4 7.5M12 12v9"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3 17L17 3l4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2"/></symbol>
+</svg>
 <header class="topbar solid">
-  <a class="brand" href="/" aria-label="VoxelFlight home"><img src="favicon.svg" alt="" width="28" height="28"><span>VoxelFlight</span></a>
+  <a class="brand" href="/" aria-label="VoxelFlight home"><img src="favicon.svg" alt="" width="22" height="22"><span>VoxelFlight</span><small>Studio</small></a>
   <nav class="links">
     <a href="/">Explore</a>
     <a href="/studio" class="current" aria-current="page">Studio</a>
     <a href="/#evidence">Evidence</a>
+    <a href="/#how">Method</a>
     <a href="/login?return_to=/studio" class="signin" data-account-link>Sign in</a>
   </nav>
 </header>
@@ -25,16 +33,16 @@
 <main class="studio">
   <section class="studio-hero">
     <div>
-      <p class="kicker">Reconstruction studio</p>
-      <h1 id="greeting">Turn one drone flight into a measured 3D model.</h1>
-      <p class="lede">Add a video and its GPS log. VoxelFlight checks them in your browser before anything is uploaded, then reconstructs on a GPU: about 7 minutes for a 10-minute flight in fast mode.</p>
+      <p class="kicker" id="greeting-kicker">Studio</p>
+      <h1 id="greeting">New reconstruction</h1>
+      <p class="lede">Add a drone video and its GPS log. Files are checked in the browser before upload. A 10-minute flight takes about 7 minutes in fast mode on one GPU.</p>
     </div>
     <div id="service" class="service glass" data-state="checking"><i></i><div><b id="service-title">Checking the processing service…</b><small id="service-detail"></small></div></div>
   </section>
 
   <div id="signin-banner" class="banner glass" hidden>
-    <div><b>Sign in to submit and keep your reconstructions.</b><small>You can still check files and open models without an account.</small></div>
-    <a class="primary small-btn" href="/login?return_to=/studio">Sign in with Google</a>
+    <div><b>Sign in to submit jobs and keep your reconstructions.</b><small>File checks and the local model viewer work without an account.</small></div>
+    <a class="primary small-btn" href="/login?return_to=/studio">Sign in</a>
   </div>
 
   <div class="grid">
@@ -43,68 +51,68 @@
       <form id="run-form" novalidate>
         <label class="drop" id="video-drop">
           <input id="video" name="video" type="file" accept=".mp4,.mov,video/mp4,video/quicktime" required>
-          <span class="drop-icon">🎬</span>
-          <b>Drop a drone video or click to choose</b>
+          <svg class="icon drop-icon"><use href="#i-video"/></svg>
+          <b>Drop a video file or browse</b>
           <small>MP4 or MOV · H.264 or HEVC · 1080p or 4K · up to 1 GiB / 30 min</small>
         </label>
         <div id="video-check" class="check" hidden></div>
 
         <label class="drop compact" id="gps-drop">
           <input id="telemetry" name="telemetry" type="file" accept=".srt,.SRT,.csv,.gpx,.json">
-          <span class="drop-icon">🛰️</span>
+          <svg class="icon drop-icon"><use href="#i-pin"/></svg>
           <b>GPS log</b>
-          <small>DJI .SRT, DJI / AirData flight record (.csv), GPX or JSON · needed for real-world coordinates</small>
+          <small>DJI .SRT, DJI or AirData flight record (.csv), GPX or JSON. Required for georeferencing.</small>
         </label>
         <div id="gps-check" class="check" hidden></div>
 
         <details class="optional">
-          <summary>Camera calibration <em>optional · estimated automatically if missing</em></summary>
+          <summary>Camera calibration <em>optional; estimated if not provided</em></summary>
           <label class="file-line"><input id="calibration" name="calibration" type="file" accept=".json"><small>JSON with width, height and intrinsic_matrix (3×3), optional distortion_coefficients</small></label>
         </details>
 
         <fieldset class="modes-pick">
           <legend>Mode</legend>
           <label><input type="radio" name="mode" value="fast" checked><span><b>Fast</b><small>≈ 7 min per 10-min video</small></span></label>
-          <label><input type="radio" name="mode" value="quality"><span><b>High quality</b><small>≈ 14 min · 0.6 m shape</small></span></label>
-          <label><input type="radio" name="mode" value="coverage"><span><b>Maximum coverage</b><small>≈ 37 min · most surface</small></span></label>
+          <label><input type="radio" name="mode" value="quality"><span><b>High quality</b><small>≈ 14 min per 10-min video</small></span></label>
+          <label><input type="radio" name="mode" value="coverage"><span><b>Maximum coverage</b><small>≈ 37 min per 10-min video</small></span></label>
         </fieldset>
-        <button id="submit" class="primary wide" type="submit" disabled>Choose a video to start</button>
-        <p id="form-note" class="note" role="status" aria-live="polite">Nothing is uploaded until the processing service accepts your run.</p>
+        <button id="submit" class="primary wide" type="submit" disabled>Select a video</button>
+        <p id="form-note" class="note" role="status" aria-live="polite">Files are uploaded only after the processing service accepts the job.</p>
       </form>
       <section id="progress" class="progress" hidden><div class="progress-row"><b id="progress-stage">Queued</b><button id="cancel" class="link-button" type="button">Cancel</button></div><progress id="progress-bar" max="1"></progress><small id="progress-detail"></small></section>
     </section>
 
     <div class="side">
       <section class="card glass" aria-labelledby="runs-title">
-        <div class="card-head"><span class="step-dot">2</span><h2 id="runs-title">Your reconstructions</h2><button id="refresh" class="link-button" type="button">Refresh</button></div>
+        <div class="card-head"><span class="step-dot">2</span><h2 id="runs-title">Reconstructions</h2><button id="refresh" class="link-button" type="button">Refresh</button></div>
         <div id="runs" class="runs">
           <a class="run demo" href="/">
             <img src="assets/latest/poster.jpg" alt="Frame from the Zurich demo flight" loading="lazy">
-            <span><b>Zurich street flight · demo</b><small id="demo-meta">10-minute video · photo-textured · measured against survey LiDAR</small></span>
-            <em>Open in 3D →</em>
+            <span><b>Zurich street corridor (sample)</b><small id="demo-meta">10-minute video · textured model · survey-checked</small></span>
+            <em>Open</em>
           </a>
         </div>
       </section>
 
       <section class="card glass" aria-labelledby="open-title">
-        <div class="card-head"><span class="step-dot">3</span><h2 id="open-title">Open a model</h2></div>
-        <p class="muted small">View any GLB or PLY from your computer in the 3D viewer. The file stays on your device.</p>
-        <label class="drop compact"><input id="model-file" type="file" accept=".glb,.ply"><span class="drop-icon">🧊</span><b>Choose a .glb or .ply</b><small>Up to 5 million points</small></label>
+        <div class="card-head"><span class="step-dot">3</span><h2 id="open-title">Open a local model</h2></div>
+        <p class="muted small">View a GLB or PLY file in the 3D viewer. The file is not uploaded.</p>
+        <label class="drop compact"><input id="model-file" type="file" accept=".glb,.ply"><svg class="icon drop-icon"><use href="#i-cube"/></svg><b>Choose a .glb or .ply file</b><small>Up to 5 million points</small></label>
       </section>
 
       <section class="card glass" aria-labelledby="account-title">
         <div class="card-head"><span class="step-dot">4</span><h2 id="account-title">Account</h2></div>
         <div id="account" class="account"><span class="avatar" id="avatar">?</span><div><b id="account-name">Not signed in</b><small id="account-mail">Sign in with Google to save runs</small></div></div>
-        <div class="account-actions"><a id="account-action" class="ghost small-btn" href="/login?return_to=/studio">Sign in</a><a class="link-button" href="/account">Account page</a></div>
+        <div class="account-actions"><a id="account-signin" class="ghost small-btn" href="/login?return_to=/studio">Sign in</a><button id="signout" class="ghost small-btn" type="button" hidden>Sign out</button></div>
       </section>
     </div>
   </div>
 </main>
 
 <dialog id="viewer-dialog" class="viewer-dialog">
-  <div class="viewer-head"><b id="viewer-title">Model</b><small id="viewer-stats"></small><button id="viewer-close" class="close" aria-label="Close viewer">✕</button></div>
+  <div class="viewer-head"><b id="viewer-title">Model</b><small id="viewer-stats"></small><button id="viewer-close" class="close" aria-label="Close viewer"><svg class="icon"><use href="#i-x"/></svg></button></div>
   <div class="viewer-stage"><canvas id="viewer-canvas" aria-label="Your model in 3D"></canvas></div>
-  <div class="viewer-tools"><button data-fit="overview">Overview</button><button data-fit="plan">Top</button><button id="viewer-measure">📏 Measure</button><span id="viewer-note" class="muted small">Drag to orbit · scroll to zoom</span></div>
+  <div class="viewer-tools"><button data-fit="overview">Overview</button><button data-fit="plan">Top</button><button id="viewer-measure"><svg class="icon"><use href="#i-ruler"/></svg> Measure</button><span id="viewer-note" class="muted small">Drag to orbit · scroll to zoom</span></div>
 </dialog>
 <script type="module" src="studio.js"></script>
 </body>

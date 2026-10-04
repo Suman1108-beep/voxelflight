@@ -37,7 +37,7 @@ function apply(t,force=false){
   $('#timeline').value=Math.round(t/duration*1000);
   $('#clock').textContent=clock(t*scene.preview_speed);
   markThumb(i);
-  $('#where').textContent=`Keyframe ${i+1} of ${poses.length} · ${Math.round(pathLength[i])} m flown · ${Math.round(p.z+scene.utm_origin[2])} m above sea level`;
+  $('#where').textContent=`View ${i+1} / ${poses.length} · ${Math.round(pathLength[i])} m along path · elevation ${Math.round(p.z+scene.utm_origin[2])} m`;
 }
 function setMode(next){
   mode=next;$$('.views button').forEach(b=>b.classList.toggle('active',b.dataset.view===mode));
@@ -47,7 +47,7 @@ function setMode(next){
   apply(curT,true);
 }
 function setPlaying(on){
-  playing=on;$('#play').textContent=on?'❚❚':'▶';$('#play').setAttribute('aria-label',on?'Pause flight':'Play flight');
+  playing=on;$('#play').innerHTML=`<svg class="icon"><use href="#i-${on?'pause':'play'}"/></svg>`;$('#play').setAttribute('aria-label',on?'Pause flight':'Play flight');
   if(on){const target=curT;video.play().then(()=>{if(Math.abs(video.currentTime-target)>.5)video.currentTime=target;}).catch(()=>setPlaying(false));}else video.pause();
 }
 function tick(){if(playing&&!video.seeking&&Math.abs(video.currentTime-curT)<3)curT=video.currentTime;else if(playing&&!video.seeking)video.currentTime=curT;if(playing||mode!=='orbit')apply(curT);requestAnimationFrame(tick);}
@@ -55,16 +55,15 @@ function seek(t){curT=Math.min(duration,Math.max(0,t));try{video.currentTime=cur
 
 function metrics(){
   const s=evaluation.surface_shape_vs_lidar,v=evaluation.visible_completeness||{},fill=evaluation.with_gap_fill?.visible_completeness;
-  const items=[[minsec(scene.fast_mode_seconds),'10-minute video → full 3D model, fast mode, one GPU'],
-    [scene.quality_mode_seconds?minsec(scene.quality_mode_seconds):'—','high-quality mode, still under the 15-minute target'],
-    [metres(s.median_m),'median shape error vs national survey LiDAR (0.5 m absolute with RTK GPS)'],
-    [pct(v.recall_1m),`of the visible scene measured within 1 m${fill?` · ${pct(fill.recall_1m)} with road gap fill`:''}`]];
-  $('#metrics').innerHTML=items.map(([b,t])=>`<div class="metric"><b>${b}</b><span>${t}</span></div>`).join('');
+  const rows=[['Processing time, fast mode',minsec(scene.fast_mode_seconds)],['Processing time, high quality',scene.quality_mode_seconds?minsec(scene.quality_mode_seconds):'—'],
+    ['Shape error vs survey (median)',metres(s.median_m)],['Absolute position with RTK GPS','0.50 m'],
+    ['Visible scene within 1 m',`${pct(v.recall_1m)}${fill?` (${pct(fill.recall_1m)} with fill)`:''}`]];
+  $('#metrics').innerHTML=rows.map(([k,b])=>`<div class="metric"><span>${k}</span><b>${b}</b></div>`).join('');
 }
 
 const colorOf=e=>new THREE.Color(BINS.find(([max])=>e<=max)[1]);
 async function heatmap(on){
-  if(on&&!errors){toast('Loading accuracy data…');errors=new Uint8Array(await (await fetch(base+'errors.bin')).arrayBuffer());}
+  if(on&&!errors){toast('Loading error data');errors=new Uint8Array(await (await fetch(base+'errors.bin')).arrayBuffer());}
   viewer.object.traverse(c=>{
     if(!c.isMesh||c.userData.fill)return;
     const n=c.geometry.attributes.position.count;if(!errors||errors.length!==n)return;
@@ -73,13 +72,13 @@ async function heatmap(on){
     else if(c.userData.photo){c.material.dispose();c.material=c.userData.photo;c.geometry.deleteAttribute('color');}
   });
   if(on&&errors){const counts=BINS.map(([max],k)=>errors.filter(e=>e<=max&&(k===0||e>BINS[k-1][0])).length);
-    $('#legend').innerHTML=BINS.map(([,col,label],k)=>`<div><i style="background:${col}"></i>${label}<small>${pct(counts[k]/errors.length)}</small></div>`).join('')+'<div><small style="margin:0">Distance to the survey after one evaluation-only alignment</small></div>';}
-  $('#legend').hidden=!on;viewer.render();toast(on?'Green = within 0.3 m of the national laser survey':'');
+    $('#legend').innerHTML=BINS.map(([,col,label],k)=>`<div><i style="background:${col}"></i>${label}<small>${pct(counts[k]/errors.length)}</small></div>`).join('')+'<div><small style="margin:0">Share of model vertices · evaluation-only alignment</small></div>';}
+  $('#legend').hidden=!on;viewer.render();toast(on?'Colour shows distance to the national laser survey after one evaluation-only alignment':'');
 }
 
 let toastTimer;
 function toast(text){clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=!text;if(text)toastTimer=setTimeout(()=>$('#toast').hidden=true,3200);}
-function measured(result){if(result?.distance)toast(`Distance ${metres(result.distance)} · model shape is ≈0.7 m median vs survey`);$('#measure').classList.remove('on');}
+function measured(result){if(result?.distance)toast(`Distance ${metres(result.distance)} (model shape: 0.7 m median vs survey)`);$('#measure').classList.remove('on');}
 
 function utmToLatLon(E,N,zone=32){   // WGS84 transverse Mercator inverse (northern hemisphere)
   const a=6378137,f=1/298.257223563,k0=.9996,e2=f*(2-f),ep2=e2/(1-e2),x=E-5e5,M=N/k0,mu=M/(a*(1-e2/4-3*e2*e2/64-5*e2**3/256));
@@ -94,7 +93,7 @@ function inspect(e){
   const hit=viewer.hit(e);if(!hit){$('#inspect').hidden=true;return;}
   const o=scene.utm_origin,E=hit.point.x+o[0],N=hit.point.y+o[1],H=hit.point.z+o[2],[lat,lon]=utmToLatLon(E,N);
   const fill=hit.object.userData.fill||hit.object.parent?.userData?.fill,err=!fill&&errors&&hit.face?errors[hit.face.a]:null;
-  $('#inspect').innerHTML=`<b>${fill?'Interpolated road surface':'Measured surface'}</b><br>${lat.toFixed(6)}°, ${lon.toFixed(6)}°<br>UTM 32N  E ${E.toFixed(1)}  N ${N.toFixed(1)}<br>Height ${H.toFixed(1)} m${err!=null?`<br>Distance to survey: ${err===255?'no survey point nearby':metres(err/10)}`:errors?'':'<br><small>Turn on the accuracy heatmap to see the error here</small>'}`;
+  $('#inspect').innerHTML=`<b>${fill?'Interpolated surface (road fill)':'Measured surface'}</b><br>${lat.toFixed(6)}°, ${lon.toFixed(6)}°<br>UTM 32N  E ${E.toFixed(1)}  N ${N.toFixed(1)}<br>Elevation ${H.toFixed(1)} m${err!=null?`<br>Distance to survey ${err===255?'n/a':metres(err/10)}`:errors?'':'<br>Enable “Error vs survey” to see the local error'}`;
   const box=$('#inspect');box.hidden=false;box.style.left=Math.min(e.clientX+14,innerWidth-300)+'px';box.style.top=Math.min(e.clientY+14,innerHeight-150)+'px';
 }
 
@@ -104,7 +103,7 @@ function buildStrip(){
   $('#strip').innerHTML=thumbs.map(({k,t})=>`<button class="thumb" data-k="${k}" title="Jump to ${clock(t*scene.preview_speed)} of the flight"><img src="${base}frames/frame_${String(k).padStart(5,'0')}.jpg" alt="Drone camera at ${clock(t*scene.preview_speed)}" loading="lazy"><span>${clock(t*scene.preview_speed)}</span></button>`).join('');
   $$('.thumb').forEach(b=>b.addEventListener('click',()=>{
     const k=Number(b.dataset.k);setPlaying(false);collapseIntro();if(mode==='orbit')setMode('chase');seek(times[k]);
-    toast(document.body.classList.contains('comparing')?'Real frame and model at this moment':'Jumped here · the corner video shows the real camera · “Compare with real frame” overlays it');
+    toast(document.body.classList.contains('comparing')?'Camera frame and model at this position':'Moved to this position. The inset shows the source video.');
   }));
 }
 let activeThumb=-1;
@@ -166,16 +165,16 @@ $('#timeline').addEventListener('input',e=>seek(e.target.value/1000*duration));
 video.addEventListener('loadedmetadata',()=>{try{video.currentTime=curT;}catch{}});
 $$('.views button').forEach(b=>b.addEventListener('click',()=>{if(document.body.classList.contains('comparing')&&b.dataset.view!=='drone')$('#compare').click();setMode(b.dataset.view);}));
 $('#compare').addEventListener('click',()=>{
-  const on=document.body.classList.toggle('comparing');$('#blend-wrap').hidden=!on;$('#compare').textContent=on?'Exit comparison':'Compare with real frame';
+  const on=document.body.classList.toggle('comparing');$('#blend-wrap').hidden=!on;$('#compare span').textContent=on?'Exit comparison':'Compare with camera frame';
   video.style.opacity=on?$('#blend').value/100:'';try{video.currentTime=curT;}catch{}setMode(on?'drone':'chase');setTimeout(()=>{viewer.resize();apply(curT,true);},60);
-  toast(on?'The real camera frame over the 3D model from the same camera pose. Drag the slider to blend.':'');
+  toast(on?'Source frame over the model, rendered from the same camera pose. Use the slider to blend.':'');
 });
 $('#blend').addEventListener('input',e=>{video.style.opacity=e.target.value/100;});
 $$('[data-layer]').forEach(box=>box.addEventListener('change',async()=>{
   const on=box.checked,layer=box.dataset.layer;
   if(layer==='heat'){await heatmap(on);if(on&&mode!=='orbit')setMode('orbit');if(on)viewer.fit('overview');}else if(layer==='cloud')await viewer.toggleCloud(on);else viewer.setLayer(layer,on);
 }));
-$('#measure').addEventListener('click',()=>{if(mode!=='orbit')setMode('orbit');setPlaying(false);viewer.setMeasuring(true);$('#measure').classList.add('on');toast('Click two points on the model');});
+$('#measure').addEventListener('click',()=>{if(mode!=='orbit')setMode('orbit');setPlaying(false);viewer.setMeasuring(true);$('#measure').classList.add('on');toast('Select two points on the model');});
 $('#snapshot').addEventListener('click',()=>{const a=document.createElement('a');a.href=viewer.snapshot();a.download='voxelflight-view.png';a.click();});
 $('#downloads-button').addEventListener('click',()=>{const d=$('#downloads');d.hidden=!d.hidden;$('#downloads-button').setAttribute('aria-expanded',String(!d.hidden));});
 $('#export-obj').addEventListener('click',async()=>{const r=await viewer.export('obj');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([r.data],{type:r.type}));a.download=r.name;a.click();});
@@ -184,4 +183,4 @@ canvas.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];if(mode!=='
 canvas.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down[0],e.clientY-down[1])<5&&!viewer.measuring)inspect(e);down=null;});
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Escape'){openPanel(null);return;}if(e.code==='Space'){e.preventDefault();$('#play').click();}
   if(e.code==='ArrowRight'||e.code==='ArrowLeft')seek(curT+(e.code==='ArrowRight'?2:-2));});
-init().catch(err=>{$('#loading-text').textContent='The 3D model could not be loaded: '+err.message;console.error(err);});
+init().catch(err=>{$('#loading-text').textContent='The model could not be loaded: '+err.message;console.error(err);});

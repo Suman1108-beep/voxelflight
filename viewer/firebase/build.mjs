@@ -20,7 +20,7 @@ export async function prepareFirebase(root,dist){
   for(const [destination,source] of [['index.html','explore.html'],['explore.html','explore.html'],['studio.html','studio.html'],['login.html','login.html'],['account.html','account.html'],['logout.html','logout.html'],['workspace.html','index.html'],['engine.html','engine.html']]){
     let html=await readFile(resolve(root,source),'utf8');
     html=html.replace(/<script type="module" src="\/entrance\.js"><\/script>/g,'');
-    if(source!=='explore.html')html=html.replace('</head>',scripts+'</head>');   // the public explorer needs no sign-in code
+    html=html.replace('</head>',scripts+'</head>');
     html=html.replace(/href="(?:\/)?engine\.html"/g,'href="/engine"');
     html=html.replace(/<a href="\/account"([^>]*)>Account<\/a>/g,'<a href="/account"$1 data-account-link>Account</a>');
     html=html.replaceAll('Processing workstation required','Authenticated processing queue')
@@ -36,7 +36,7 @@ export async function prepareFirebase(root,dist){
       html=html.replace('Reconstruction files stay on the processing workstation; signing in does not upload videos or start a reconstruction.','Reconstruction files are stored by the operator-managed processing service and restricted to your account. Signing in does not upload videos or start a reconstruction.');
     }
     if(source==='account.html'){
-      html=html.replace('WELCOME TO YOUR STUDIO','YOUR VOXELFLIGHT ACCOUNT');
+      html=html.replace('WELCOME TO YOUR STUDIO','Account');
       html=html.replace('<h1 id="account-name">Your account</h1>','<h1 id="account-name">Welcome.</h1>');
       html=html.replace('New video processing runs on the configured workstation. Local runs are not synced to this account.','Your submitted reconstructions are private to your account. Open the processing workspace to create a run or revisit your results.');
       html=html.replace('id="account-error" role="alert"></p>','id="account-error" role="alert"></p><a class="account-recovery" href="/login">Back to sign-in</a>');
