@@ -26,3 +26,16 @@ test('Firebase hosts only the dedicated public output, with no catch-all API rew
   assert.equal(hosting.cleanUrls,true);
   assert.ok(hosting.headers.some(rule=>rule.headers.some(h=>h.key==='Cross-Origin-Opener-Policy'&&h.value==='same-origin-allow-popups')));
 });
+test('the studio is private: hidden until signed in, signed-out visitors go to sign-in and back',async()=>{
+  const read=name=>readFile(new URL('../'+name,import.meta.url),'utf8');
+  assert.match(await read('studio.html'),/<main class="studio" id="studio-main" hidden>/);
+  const auth=await read('firebase/auth.js');
+  assert.match(auth,/page==='studio'&&!profile\)\{if\(!busy\)requireSignin\(\)/);
+  assert.match(auth,/location\.replace\(`\/login\?return_to=\$\{encodeURIComponent\(location\.pathname\)\}`\)/);
+  assert.match(auth,/if\(page==='studio'\)requireSignin\(\);/);   // an unavailable sign-in service never opens the studio
+  const studio=await read('studio.js');
+  assert.match(studio,/if\(hosted&&!profile\)return;/);assert.match(studio,/\$\('#studio-main'\)\.hidden=false/);
+  // The explorer stays a public guest demo.
+  assert.doesNotMatch(await read('explore.html'),/data-page="studio"/);
+  assert.match(await read('login.html'),/Explore as a guest/);
+});

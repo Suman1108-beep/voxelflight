@@ -21,5 +21,5 @@ test('page links and explorer views both show the running scout',async()=>{
   const explore=await read('explore.js');
   assert.match(explore,/from '\.\/pixel\.js'/);assert.match(explore,/showTransition\(/);assert.match(explore,/motionDisabled\(\)/);
   assert.match(explore,/openPanel\(hash,\{animate:false\}\)/);
-  assert.match(await read('studio.js'),/import '\.\/pixel\.js'/);
+  assert.match(await read('studio.js'),/from '\.\/pixel\.js'/);
 });

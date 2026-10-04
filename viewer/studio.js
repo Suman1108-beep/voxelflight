@@ -2,7 +2,7 @@
 // and open your own GLB/PLY models. Uses the same /api job contract as the processing backend (vf2/cloud).
 import {validateVideoFile} from './video-input.js';
 import {sessionHeaders} from './session-bridge.js';
-import './pixel.js';
+import {showTransition,hideTransition} from './pixel.js';
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -129,6 +129,8 @@ document.querySelectorAll('[data-fit]').forEach(b=>b.addEventListener('click',()
 $('#viewer-measure').addEventListener('click',()=>{viewer?.setMeasuring(true);$('#viewer-note').textContent='Click two points on the model';});
 
 function account(profile){
+  if(hosted&&!profile)return;   // the auth module sends signed-out visitors to /login
+  if(!signedIn){hideTransition();$('#studio-main').hidden=false;}
   signedIn=!!profile;$('#signin-banner').hidden=signedIn||!hosted;
   $('#avatar').textContent=profile?.initial??'?';$('#account-name').textContent=profile?.name??'Not signed in';
   $('#account-mail').textContent=profile?`${profile.email??''}${profile.provider?` · ${profile.provider}`:''}`:'Sign in to submit jobs';
@@ -137,6 +139,9 @@ function account(profile){
   refresh();if(signedIn&&health)runs().catch(()=>{});
 }
 addEventListener('voxelflight:authchange',e=>account(e.detail.profile??null));
-if(!hosted){$('#signin-banner').hidden=true;}
+// The hosted studio is private: keep it behind the scout until the sign-in check finishes.
+const gate=()=>{if(hosted&&!signedIn)showTransition('Opening your studio','Checking your sign-in…',{context:'STUDIO'});};
+gate();addEventListener('pageshow',gate);   // pixel.js clears the overlay on pageshow, which also fires on first load
+if(!hosted){$('#signin-banner').hidden=true;$('#studio-main').hidden=false;}
 fetch('assets/latest/evaluation.json').then(r=>r.json()).then(e=>{$('#demo-meta').textContent=`10-min video · coverage ${Math.round(e.visible_completeness.recall_1m*100)}% · shape error ${e.surface_shape_vs_lidar.median_m.toFixed(2)} m`;}).catch(()=>{});
 connect();poll();

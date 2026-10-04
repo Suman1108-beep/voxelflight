@@ -22,6 +22,7 @@ function renderUser(user){
     link.title=profile?`Welcome, ${profile.name}`:'Sign in to VoxelFlight';
     link.href=profile?'/account':`/login?return_to=${encodeURIComponent(safeReturnTo(location.pathname+location.hash,location.origin))}`;
   });
+  if(page==='studio'&&!profile){if(!busy)requireSignin();return;}
   if(page==='signin'){
     const welcome=$('#returning-account');welcome.hidden=!profile;
     if(profile){$('#returning-name').textContent=`Welcome back, ${profile.name}.`;$('#returning-link').href=returnTo;}
@@ -43,6 +44,11 @@ function renderUser(user){
     $('#logout-title').textContent=profile?'One moment.':'See you next flight.';
     $('#logout-message').textContent=profile?'Ending your session on this device…':'You’re signed out of VoxelFlight. Saved public reconstructions are still available.';
   }
+}
+// Private pages send signed-out visitors to sign-in and come back afterwards.
+function requireSignin(){
+  showTransition('Sign in to open your studio','Your uploads and reconstructions belong to your account.',{context:'SIGN IN'});
+  location.replace(`/login?return_to=${encodeURIComponent(location.pathname)}`);
 }
 function providerFor(id){
   if(id==='google'){const provider=new GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});return provider;}
@@ -102,6 +108,7 @@ async function start(){
     $('#account-loading')?.setAttribute('hidden','');$('#logout-loading')?.setAttribute('hidden','');
     document.querySelectorAll('.provider-state').forEach(label=>label.textContent='Not connected');
     if(page==='signed-out')$('#logout-state').textContent='STATUS UNAVAILABLE';
+    if(page==='studio')requireSignin();
   }
 }
 start();
